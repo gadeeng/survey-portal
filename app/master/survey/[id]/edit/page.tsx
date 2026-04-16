@@ -99,13 +99,13 @@ function RatingInput({ min, max, onMinChange, onMaxChange }: {
 function FieldCard({ index, label, type, options, ratingMin, ratingMax, types,
   onLabelChange, onTypeChange, onOptionsChange, onRatingMinChange, onRatingMaxChange,
   onMoveUp, onMoveDown, onRemove, isFirst, isLast, labelPlaceholder }: {
-  index: number; label: string; type: string; options: string[]
-  ratingMin: number; ratingMax: number; types: { value: string; label: string }[]
-  onLabelChange: (v: string) => void; onTypeChange: (v: string) => void
-  onOptionsChange: (v: string[]) => void; onRatingMinChange: (v: number) => void
-  onRatingMaxChange: (v: number) => void; onMoveUp: () => void; onMoveDown: () => void
-  onRemove: () => void; isFirst: boolean; isLast: boolean; labelPlaceholder: string
-}) {
+    index: number; label: string; type: string; options: string[]
+    ratingMin: number; ratingMax: number; types: { value: string; label: string }[]
+    onLabelChange: (v: string) => void; onTypeChange: (v: string) => void
+    onOptionsChange: (v: string[]) => void; onRatingMinChange: (v: number) => void
+    onRatingMaxChange: (v: number) => void; onMoveUp: () => void; onMoveDown: () => void
+    onRemove: () => void; isFirst: boolean; isLast: boolean; labelPlaceholder: string
+  }) {
   return (
     <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -143,6 +143,45 @@ function FieldCard({ index, label, type, options, ratingMin, ratingMax, types,
           <p style={{ fontSize: 13, color: '#2C8FC3', margin: 0 }}>User akan memilih entitas/wilayah kerja secara hierarkis (dropdown bertingkat)</p>
         </div>
       )}
+    </div>
+  )
+}
+
+// Tambah komponen ini (letakkan di atas ConfirmPublishModal)
+function PublishSuccessModal({ title, surveyId, onClose, onGoToMaster }: {
+  title: string
+  surveyId: string
+  onClose: () => void
+  onGoToMaster: () => void
+}) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(13,31,60,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: '#fff', borderRadius: 20, padding: '2.5rem 2rem', maxWidth: 440, width: '100%', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+        <div style={{ width: 76, height: 76, borderRadius: '50%', background: 'linear-gradient(135deg, #16a34a, #22c55e)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: 32, color: '#fff' }}>
+          ✓
+        </div>
+        <p style={{ fontSize: 20, fontWeight: 700, color: '#0d1f3c', margin: '0 0 10px' }}>
+          Survey Berhasil Dipublish!
+        </p>
+        <p style={{ fontSize: 14, color: '#6b7280', marginBottom: '1.25rem' }}>
+          Survey <strong style={{ color: '#0d1f3c' }}>"{title}"</strong> sudah aktif dan siap diisi.
+        </p>
+
+        {/* ↓ ShareLinkBox */}
+        <ShareLinkBox surveyId={surveyId} />
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '11px 0', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', fontSize: 14, fontWeight: 600, color: '#4a5568', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Tetap di Sini
+          </button>
+          <button onClick={onGoToMaster} style={{ flex: 1, padding: '11px 0', border: 'none', borderRadius: 10, background: 'linear-gradient(135deg, #38a169, #48bb78)', fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Ke Halaman Master
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -250,6 +289,88 @@ function ConfirmPublishModal({
   )
 }
 
+// Letakkan di atas komponen PublishModal / sebelum export default
+
+function ShareLinkBox({ surveyId }: { surveyId: string }) {
+  const [copied, setCopied] = useState(false)
+  const url = `${window.location.origin}/survey/${surveyId}`
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // fallback for older browsers
+      const el = document.createElement('textarea')
+      el.value = url
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div style={{
+      background: '#f0f7ff',
+      border: '1.5px solid #bfdbfe',
+      borderRadius: 10,
+      padding: '12px 14px',
+      marginBottom: '1.5rem',
+      textAlign: 'left',
+    }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#1B6FA8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>
+        🔗 Link Survey
+      </p>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          readOnly
+          value={url}
+          style={{
+            flex: 1,
+            fontSize: 13,
+            color: '#1a2332',
+            background: '#fff',
+            border: '1px solid #dde3ec',
+            borderRadius: 7,
+            padding: '8px 12px',
+            outline: 'none',
+            fontFamily: 'inherit',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          onFocus={(e) => e.target.select()}
+        />
+        <button
+          onClick={handleCopy}
+          style={{
+            flexShrink: 0,
+            padding: '8px 16px',
+            borderRadius: 7,
+            border: 'none',
+            background: copied
+              ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+              : 'linear-gradient(135deg, #1B6FA8, #2C8FC3)',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background 0.2s',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {copied ? '✓ Tersalin!' : 'Salin Link'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function EditSurveyPage() {
   const router = useRouter()
   const params = useParams()
@@ -263,7 +384,8 @@ export default function EditSurveyPage() {
   const [description, setDescription] = useState('')
   const [userFields, setUserFields] = useState<UserField[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
-  const [showConfirmPublish, setShowConfirmPublish] = useState(false)   // ← NEW
+  const [showConfirmPublish, setShowConfirmPublish] = useState(false)
+  const [showPublishSuccess, setShowPublishSuccess] = useState(false)
 
   useEffect(() => { fetchSurvey() }, [id])
 
@@ -297,6 +419,7 @@ export default function EditSurveyPage() {
     return updated
   }
 
+  // Ganti handleSave yang lama
   const handleSave = async (status: 'draft' | 'active') => {
     setSaving(true)
     setError('')
@@ -304,15 +427,25 @@ export default function EditSurveyPage() {
       const res = await fetch(`/api/master/surveys/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status, userFields, questions })
+        body: JSON.stringify({ title, description, status, userFields, questions }),
       })
       const text = await res.text()
-      if (!res.ok) { const data = text ? JSON.parse(text) : {}; setError(data.error || 'Terjadi kesalahan'); return }
-      router.push('/master')
+      if (!res.ok) {
+        const data = text ? JSON.parse(text) : {}
+        setError(data.error || 'Terjadi kesalahan')
+        return
+      }
+      if (status === 'active') {
+        setShowPublishSuccess(true)
+      } else {
+        router.push('/master')
+      }
     } catch (e) {
       console.error(e)
       setError('Terjadi kesalahan, coba lagi')
-    } finally { setSaving(false) }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const steps = ['Info Dasar', 'Form User', 'Pertanyaan', 'Review']
@@ -342,6 +475,16 @@ export default function EditSurveyPage() {
             setShowConfirmPublish(false)
             handleSave('active')
           }}
+        />
+      )}
+
+      {/* Tambahkan di bawah ConfirmPublishModal */}
+      {showPublishSuccess && (
+        <PublishSuccessModal
+          title={title}
+          surveyId={id}
+          onClose={() => setShowPublishSuccess(false)}
+          onGoToMaster={() => router.push('/master')}
         />
       )}
 

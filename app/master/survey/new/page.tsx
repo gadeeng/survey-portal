@@ -419,9 +419,10 @@ function Stepper({ steps, current }: { steps: string[]; current: number }) {
   )
 }
 
-// ─── Publish Modal ────────────────────────────────────────────────────────────
-function PublishModal({ title, onClose, onGoToMaster }: {
+// Ganti komponen PublishModal lama dengan ini
+function PublishModal({ title, surveyId, onClose, onGoToMaster }: {
   title: string
+  surveyId: string          // ← prop baru
   onClose: () => void
   onGoToMaster: () => void
 }) {
@@ -430,10 +431,13 @@ function PublishModal({ title, onClose, onGoToMaster }: {
       <div className="modal-box">
         <div className="modal-check">✓</div>
         <p className="modal-title">Survey Berhasil Dipublish!</p>
-        <p className="modal-body">
+        <p className="modal-body" style={{ marginBottom: '1.25rem' }}>
           Survey <strong>"{title}"</strong> sudah aktif dan siap diisi oleh responden.
         </p>
-        <p className="modal-hint">Anda dapat mengelola survey ini di halaman Master.</p>
+
+        {/* ↓ Tambahkan ShareLinkBox di sini */}
+        {surveyId && <ShareLinkBox surveyId={surveyId} />}
+
         <div className="modal-btns">
           <button className="modal-btn-outline" onClick={onClose}>
             Lihat Survey
@@ -503,6 +507,88 @@ function ConfirmPublishModal({
   )
 }
 
+// Letakkan di atas komponen PublishModal / sebelum export default
+
+function ShareLinkBox({ surveyId }: { surveyId: string }) {
+  const [copied, setCopied] = useState(false)
+  const url = `${window.location.origin}/survey/${surveyId}`
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // fallback for older browsers
+      const el = document.createElement('textarea')
+      el.value = url
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div style={{
+      background: '#f0f7ff',
+      border: '1.5px solid #bfdbfe',
+      borderRadius: 10,
+      padding: '12px 14px',
+      marginBottom: '1.5rem',
+      textAlign: 'left',
+    }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#1B6FA8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>
+        🔗 Link Survey
+      </p>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          readOnly
+          value={url}
+          style={{
+            flex: 1,
+            fontSize: 13,
+            color: '#1a2332',
+            background: '#fff',
+            border: '1px solid #dde3ec',
+            borderRadius: 7,
+            padding: '8px 12px',
+            outline: 'none',
+            fontFamily: 'inherit',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          onFocus={(e) => e.target.select()}
+        />
+        <button
+          onClick={handleCopy}
+          style={{
+            flexShrink: 0,
+            padding: '8px 16px',
+            borderRadius: 7,
+            border: 'none',
+            background: copied
+              ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+              : 'linear-gradient(135deg, #1B6FA8, #2C8FC3)',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background 0.2s',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {copied ? '✓ Tersalin!' : 'Salin Link'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NewSurveyPage() {
   const router = useRouter()
@@ -510,7 +596,8 @@ export default function NewSurveyPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showPublishModal, setShowPublishModal] = useState(false)
-  const [showConfirmPublish, setShowConfirmPublish] = useState(false)   // ← NEW
+  const [publishedId, setPublishedId] = useState('')
+  const [showConfirmPublish, setShowConfirmPublish] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [userFields, setUserFields] = useState<UserField[]>([
@@ -539,6 +626,7 @@ export default function NewSurveyPage() {
     return updated
   }
 
+  // Ganti fungsi handleSave yang lama dengan ini
   const handleSave = async (status: 'draft' | 'active') => {
     setSaving(true)
     setError('')
@@ -548,13 +636,13 @@ export default function NewSurveyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, status, userFields, questions }),
       })
-      const text = await res.text()
+      const data = await res.json()
       if (!res.ok) {
-        const data = text ? JSON.parse(text) : {}
         setError(data.error || 'Terjadi kesalahan')
         return
       }
       if (status === 'active') {
+        setPublishedId(data.survey.id)
         setShowPublishModal(true)
       } else {
         router.push('/master')
@@ -577,6 +665,7 @@ export default function NewSurveyPage() {
       {showPublishModal && (
         <PublishModal
           title={title}
+          surveyId={publishedId}
           onClose={() => setShowPublishModal(false)}
           onGoToMaster={() => router.push('/master')}
         />

@@ -198,15 +198,15 @@ const styles = `
 `
 
 const STATUS_MAP = {
-  draft:    { label: 'Draft',    cls: 'badge-draft' },
-  active:   { label: 'Aktif',    cls: 'badge-active' },
+  draft: { label: 'Draft', cls: 'badge-draft' },
+  active: { label: 'Aktif', cls: 'badge-active' },
   inactive: { label: 'Nonaktif', cls: 'badge-inactive' },
 }
 
 type ModalState =
-  | { type: 'publish';    id: string; title: string }
+  | { type: 'publish'; id: string; title: string }
   | { type: 'deactivate'; id: string; title: string }
-  | { type: 'delete';     id: string; title: string }
+  | { type: 'delete'; id: string; title: string }
   | null
 
 export default function MasterDashboard() {

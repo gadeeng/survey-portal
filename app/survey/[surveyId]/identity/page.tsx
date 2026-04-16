@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 interface UserField {
   id: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'rating' | 'date'
+  type: 'short_text' | 'long_text' | 'dropdown' | 'radio' | 'checkbox' | 'rating' | 'date' | 'entity'
   options?: string[]
   rating_min?: number
   rating_max?: number
@@ -258,7 +258,7 @@ export default function SurveyIdentityPage() {
                   <span className="required-dot">*</span>
                 </label>
 
-                {field.type === 'text' && (
+                {field.type === 'short_text' && (
                   <input
                     className="f-input"
                     type="text"
@@ -268,7 +268,7 @@ export default function SurveyIdentityPage() {
                   />
                 )}
 
-                {field.type === 'textarea' && (
+                {field.type === 'long_text' && (
                   <textarea
                     className="f-textarea"
                     value={answers[field.id] as string || ''}
@@ -286,7 +286,7 @@ export default function SurveyIdentityPage() {
                   />
                 )}
 
-                {field.type === 'select' && field.options && (
+                {field.type === 'dropdown' && field.options && (
                   <select
                     className="f-select"
                     value={answers[field.id] as string || ''}

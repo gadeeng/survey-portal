@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 interface Question {
   id: string
   question_text: string
-  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'rating' | 'select'
+  type: 'short_text' | 'long_text' | 'radio' | 'checkbox' | 'rating' | 'dropdown'
   options?: string[]
   rating_min?: number
   rating_max?: number
@@ -359,7 +359,7 @@ export default function SurveyQuestionsPage() {
                   <p className="q-number">Pertanyaan {idx + 1}</p>
                   <p className="q-text">{q.question_text}</p>
 
-                  {q.type === 'text' && (
+                  {q.type === 'short_text' && (
                     <input
                       className="f-input"
                       type="text"
@@ -369,7 +369,7 @@ export default function SurveyQuestionsPage() {
                     />
                   )}
 
-                  {q.type === 'textarea' && (
+                  {q.type === 'long_text' && (
                     <textarea
                       className="f-textarea"
                       value={answers[q.id] as string || ''}
@@ -378,7 +378,7 @@ export default function SurveyQuestionsPage() {
                     />
                   )}
 
-                  {q.type === 'select' && q.options && (
+                  {q.type === 'dropdown' && q.options && (
                     <select
                       className="f-select"
                       value={answers[q.id] as string || ''}
