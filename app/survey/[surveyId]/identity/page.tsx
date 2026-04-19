@@ -88,6 +88,7 @@ export default function SurveyIdentityPage() {
       if (level === 1) { next.l1 = value; next.l2 = ''; next.l3 = '' }
       if (level === 2) { next.l2 = value; next.l3 = '' }
       if (level === 3) { next.l3 = value }
+
       // Simpan value paling dalam yang dipilih ke answers
       const finalValue = next.l3 || next.l2 || next.l1
       setValue(fieldId, finalValue)

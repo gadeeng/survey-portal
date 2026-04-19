@@ -106,7 +106,6 @@ export default function MasterLayout({ children }: { children: React.ReactNode }
     ] : []),
   ]
 
-  // Bottom nav shows max 4 items on mobile (prioritize main items)
   const bottomNavItems = allMenuItems.slice(0, 4)
 
   const currentPageLabel = allMenuItems.find(m => m.href === pathname)?.label ?? 'Portal Survey'

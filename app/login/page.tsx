@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-// ====================== REACT BITS BACKGROUND COMPONENTS ======================
-
 const StarField = () => {
   const stars = [
     { top: '7%', left: '10%', size: 2, delay: '0s' },

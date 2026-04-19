@@ -345,7 +345,7 @@ const styles = `
   }
 `
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Sub-components ───
 
 function OptionsInput({ options, onChange }: {
   options: string[]
@@ -547,7 +547,7 @@ function ConfirmPublishModal({ title, onConfirm, onCancel }: {
   )
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main Page ───
 export default function NewSurveyPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)

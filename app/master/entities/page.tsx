@@ -23,7 +23,7 @@ const LEVEL_BADGE: Record<number, string> = {
   3: 'bg-[#fff7ed] text-[#c2410c]',
 }
 
-// ── Dropdown menu for mobile actions ──────────────────────────────────────────
+// ── Dropdown menu for mobile actions ─────
 function ActionMenu({
   entity,
   onEdit,
