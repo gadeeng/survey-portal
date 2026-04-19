@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 interface Question {
   id: string
   question_text: string
-  type: 'short_text' | 'long_text' | 'radio' | 'checkbox' | 'rating' | 'dropdown'
+  type: 'short_text' | 'long_text' | 'radio' | 'checkbox' | 'rating' | 'dropdown' | 'date'
   options?: string[]
   rating_min?: number
   rating_max?: number
@@ -424,6 +424,15 @@ export default function SurveyQuestionsPage() {
                         )
                       })}
                     </div>
+                  )}
+
+                  {q.type === 'date' && (
+                    <input
+                      className="f-input"
+                      type="date"
+                      value={answers[q.id] as string || ''}
+                      onChange={(e) => setValue(q.id, e.target.value)}
+                    />
                   )}
 
                   {q.type === 'rating' && (

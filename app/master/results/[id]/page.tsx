@@ -6,10 +6,12 @@ import { useParams, useRouter } from 'next/navigation'
 interface Field {
   id: string
   label: string
+  question_text?: string
   type: string
   options: string[] | null
   rating_min: number | null
   rating_max: number | null
+  question_order?: number
 }
 
 interface Answer {
@@ -27,10 +29,12 @@ interface ResultData {
   questionAnswers: Answer[]
 }
 
-// Pie Chart SVG
+const COLORS = ['#1B6FA8', '#2C8FC3', '#3FA7C9', '#A9D6E5', '#48bb78', '#f6ad55', '#fc8181', '#b794f4']
+
+// ── Pie Chart ──
 function PieChart({ data }: { data: { label: string; count: number; color: string }[] }) {
   const total = data.reduce((sum, d) => sum + d.count, 0)
-  if (total === 0) return <p style={{ fontSize: 13, color: '#a0aec0' }}>Belum ada jawaban</p>
+  if (total === 0) return <p className="text-[13px] text-[#a0aec0]">Belum ada jawaban</p>
 
   let cumAngle = 0
   const slices = data.map(d => {
@@ -52,11 +56,13 @@ function PieChart({ data }: { data: { label: string; count: number; color: strin
     return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`
   }
 
-  const COLORS = ['#1B6FA8', '#2C8FC3', '#3FA7C9', '#A9D6E5', '#48bb78', '#f6ad55', '#fc8181', '#b794f4']
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-      <svg width="160" height="160" viewBox="0 0 160 160">
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8 flex-wrap">
+      {/* Pie — smaller on mobile */}
+      <svg
+        className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] shrink-0"
+        viewBox="0 0 160 160"
+      >
         {slices.map((slice, i) => (
           <path
             key={i}
@@ -67,12 +73,17 @@ function PieChart({ data }: { data: { label: string; count: number; color: strin
           />
         ))}
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+      {/* Legend — wraps neatly on mobile */}
+      <div className="flex flex-col gap-2 w-full sm:w-auto">
         {slices.map((slice, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#4a5568' }}>{slice.label}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#0d1f3c', marginLeft: 4 }}>
+          <div key={i} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-[3px] shrink-0"
+              style={{ background: COLORS[i % COLORS.length] }}
+            />
+            <span className="text-[13px] text-[#4a5568] truncate max-w-[160px] sm:max-w-none">{slice.label}</span>
+            <span className="text-[13px] font-semibold text-[#0d1f3c] ml-1 shrink-0">
               {slice.count} ({Math.round((slice.count / total) * 100)}%)
             </span>
           </div>
@@ -82,42 +93,48 @@ function PieChart({ data }: { data: { label: string; count: number; color: strin
   )
 }
 
-// Bar Chart SVG
+// ── Bar Chart ──
 function BarChart({ data, min, max }: { data: { label: string; count: number }[]; min?: number; max?: number }) {
   const maxCount = Math.max(...data.map(d => d.count), 1)
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+    <div className="flex flex-col gap-2.5 w-full">
       {min !== undefined && max !== undefined && (
-        <p style={{ fontSize: 12, color: '#a0aec0', marginBottom: 4 }}>Skala: {min} – {max}</p>
+        <p className="text-[12px] text-[#a0aec0] mb-1">Skala: {min} – {max}</p>
       )}
       {data.map((d, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 13, color: '#4a5568', width: 80, flexShrink: 0, textAlign: 'right' }}>{d.label}</span>
-          <div style={{ flex: 1, background: '#f0f4f8', borderRadius: 6, height: 28, overflow: 'hidden' }}>
-            <div style={{
-              width: `${(d.count / maxCount) * 100}%`,
-              height: '100%',
-              background: 'linear-gradient(90deg, #1B6FA8, #2C8FC3)',
-              borderRadius: 6,
-              minWidth: d.count > 0 ? 4 : 0,
-              transition: 'width 0.5s ease'
-            }} />
+        <div key={i} className="flex items-center gap-2 sm:gap-3">
+          <span className="text-[12px] sm:text-[13px] text-[#4a5568] w-[52px] sm:w-[80px] shrink-0 text-right truncate">
+            {d.label}
+          </span>
+          <div className="flex-1 bg-[#f0f4f8] rounded-md h-6 sm:h-7 overflow-hidden">
+            <div
+              className="h-full rounded-md transition-all duration-500"
+              style={{
+                width: `${(d.count / maxCount) * 100}%`,
+                background: 'linear-gradient(90deg, #1B6FA8, #2C8FC3)',
+                minWidth: d.count > 0 ? 4 : 0,
+              }}
+            />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#0d1f3c', width: 32 }}>{d.count}</span>
+          <span className="text-[12px] sm:text-[13px] font-semibold text-[#0d1f3c] w-6 sm:w-8 shrink-0">
+            {d.count}
+          </span>
         </div>
       ))}
     </div>
   )
 }
 
-// Text List
+// ── Text List ──
 function TextList({ answers }: { answers: string[] }) {
-  if (answers.length === 0) return <p style={{ fontSize: 13, color: '#a0aec0' }}>Belum ada jawaban</p>
+  if (answers.length === 0) return <p className="text-[13px] text-[#a0aec0]">Belum ada jawaban</p>
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-2">
       {answers.map((ans, i) => (
-        <div key={i} style={{ background: '#f7fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#4a5568' }}>
+        <div
+          key={i}
+          className="bg-[#f7fafc] border border-[#e2e8f0] rounded-lg px-3.5 py-2.5 text-[13px] text-[#4a5568] leading-relaxed break-words"
+        >
           {ans}
         </div>
       ))}
@@ -125,9 +142,9 @@ function TextList({ answers }: { answers: string[] }) {
   )
 }
 
+// ── Field Recap Card ──
 function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
   const values = answers.map(a => a.value).filter(Boolean)
-  const COLORS = ['#1B6FA8', '#2C8FC3', '#3FA7C9', '#A9D6E5', '#48bb78', '#f6ad55', '#fc8181', '#b794f4']
 
   const renderChart = () => {
     if (['radio', 'dropdown'].includes(field.type)) {
@@ -135,7 +152,7 @@ function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
       const data = options.map((opt, i) => ({
         label: opt,
         count: values.filter(v => v === opt).length,
-        color: COLORS[i % COLORS.length]
+        color: COLORS[i % COLORS.length],
       }))
       return <PieChart data={data} />
     }
@@ -146,7 +163,7 @@ function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
         label: opt,
         count: values.filter(v => {
           try { return JSON.parse(v).includes(opt) } catch { return false }
-        }).length
+        }).length,
       }))
       return <BarChart data={data} />
     }
@@ -156,11 +173,13 @@ function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
       const max = field.rating_max || 5
       const nums = Array.from({ length: max - min + 1 }, (_, i) => min + i)
       const data = nums.map(n => ({ label: String(n), count: values.filter(v => v === String(n)).length }))
-      const avg = values.length > 0 ? (values.reduce((sum, v) => sum + Number(v), 0) / values.length).toFixed(1) : '-'
+      const avg = values.length > 0
+        ? (values.reduce((sum, v) => sum + Number(v), 0) / values.length).toFixed(1)
+        : '-'
       return (
         <div>
-          <div style={{ marginBottom: 12, padding: '8px 14px', background: '#ebf8ff', borderRadius: 8, display: 'inline-block' }}>
-            <span style={{ fontSize: 13, color: '#2C8FC3', fontWeight: 600 }}>Rata-rata: {avg}</span>
+          <div className="inline-block bg-[#ebf8ff] rounded-lg px-3.5 py-2 mb-3">
+            <span className="text-[13px] text-[#2C8FC3] font-semibold">Rata-rata: {avg}</span>
           </div>
           <BarChart data={data} min={min} max={max} />
         </div>
@@ -178,9 +197,11 @@ function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
   }
 
   return (
-    <div style={{ background: '#ffffff', borderRadius: 12, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-      <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f3c', marginBottom: 4 }}>{field.label}</p>
-      <p style={{ fontSize: 12, color: '#a0aec0', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+    <div className="bg-white rounded-xl border border-[#e2e8f0] p-4 sm:p-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+      <p className="text-[14px] font-bold text-[#0d1f3c] mb-1 leading-snug">
+        {field.question_text || field.label}
+      </p>
+      <p className="text-[11px] text-[#a0aec0] mb-4 uppercase tracking-[0.8px]">
         {field.type.replace('_', ' ')} · {values.length} jawaban
       </p>
       {renderChart()}
@@ -188,6 +209,7 @@ function FieldRecap({ field, answers }: { field: Field; answers: Answer[] }) {
   )
 }
 
+// ── Main Page ──
 export default function ResultDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -208,65 +230,93 @@ export default function ResultDetailPage() {
 
   const handleExport = async () => {
     setExporting(true)
-    const res = await fetch(`/api/master/results/${id}/export`)
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `hasil-survey-${id}.xlsx`
-    a.click()
-    URL.revokeObjectURL(url)
-    setExporting(false)
+    try {
+      const res = await fetch(`/api/master/results/${id}/exports`)
+      if (!res.ok) {
+        const contentType = res.headers.get('content-type') || ''
+        const errorMsg = contentType.includes('application/json')
+          ? (await res.json()).error
+          : `Gagal mengekspor (${res.status})`
+        alert(errorMsg)
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `hasil-survey-${id}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Terjadi kesalahan saat mengekspor')
+    } finally {
+      setExporting(false)
+    }
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 256 }}>
-      <p style={{ color: '#718096', fontSize: 14 }}>Memuat data...</p>
+    <div className="flex items-center justify-center h-64">
+      <p className="text-sm text-[#718096]">Memuat data...</p>
     </div>
   )
 
   if (!data) return null
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <button onClick={() => router.push('/master/results')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#2C8FC3', padding: 0, marginBottom: 8, fontFamily: 'inherit' }}>
-            ← Kembali
-          </button>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0d1f3c', margin: 0 }}>{data.survey.title}</h2>
-          {data.survey.description && (
-            <p style={{ fontSize: 14, color: '#718096', marginTop: 4 }}>{data.survey.description}</p>
-          )}
-        </div>
-        <button onClick={handleExport} disabled={exporting}
-          style={{ background: 'linear-gradient(135deg, #1B6FA8, #2C8FC3)', color: '#ffffff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: exporting ? 0.7 : 1 }}>
-          {exporting ? 'Mengekspor...' : '⬇ Export Excel'}
+    <div className="max-w-[800px] mx-auto font-sans">
+
+      {/* ── Header ── */}
+      <div className="mb-5 sm:mb-6">
+        {/* Back button */}
+        <button
+          onClick={() => router.push('/master/results')}
+          className="flex items-center gap-1 text-[13px] text-[#2C8FC3] font-medium mb-2.5 bg-transparent border-none cursor-pointer p-0 font-sans hover:opacity-75 transition-opacity"
+        >
+          ← Kembali
         </button>
+
+        {/* Title row — stacks on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[18px] sm:text-[22px] font-bold text-[#0d1f3c] leading-snug">
+              {data.survey.title}
+            </h2>
+            {data.survey.description && (
+              <p className="text-[13px] sm:text-[14px] text-[#718096] mt-1">{data.survey.description}</p>
+            )}
+          </div>
+
+          {/* Export button — full width on mobile */}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="w-full sm:w-auto bg-gradient-to-br from-[#1B6FA8] to-[#2C8FC3] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg border-none cursor-pointer font-sans whitespace-nowrap transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 shrink-0"
+          >
+            {exporting ? 'Mengekspor...' : '⬇ Export Excel'}
+          </button>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ background: 'linear-gradient(135deg, #1B6FA8, #2C8FC3)', borderRadius: 12, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* ── Stats Banner ── */}
+      <div className="bg-gradient-to-br from-[#1B6FA8] to-[#2C8FC3] rounded-xl px-5 sm:px-6 py-4 sm:py-5 mb-6 flex items-center gap-4 sm:gap-6">
         <div>
-          <p style={{ fontSize: 36, fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1 }}>{data.totalResponses}</p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0, marginTop: 4 }}>Total Responden</p>
+          <p className="text-[32px] sm:text-[36px] font-bold text-white leading-none">{data.totalResponses}</p>
+          <p className="text-[12px] sm:text-[13px] text-white/70 mt-1">Total Responden</p>
         </div>
-        <div style={{ width: 1, height: 48, background: 'rgba(255,255,255,0.2)', margin: '0 8px' }} />
+        <div className="w-px h-10 sm:h-12 bg-white/20 mx-1 sm:mx-2" />
         <div>
-          <p style={{ fontSize: 15, fontWeight: 600, color: '#ffffff', margin: 0 }}>{data.userFields.length} field informasi</p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0 }}>{data.questions.length} pertanyaan survey</p>
+          <p className="text-[14px] sm:text-[15px] font-semibold text-white">{data.userFields.length} field informasi</p>
+          <p className="text-[12px] sm:text-[13px] text-white/70">{data.questions.length} pertanyaan survey</p>
         </div>
       </div>
 
-      {/* Form Informasi User */}
+      {/* ── Form Informasi User ── */}
       {data.userFields.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f3c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #e2e8f0' }}>
+        <div className="mb-8">
+          <h3 className="text-[15px] sm:text-[16px] font-bold text-[#0d1f3c] mb-4 pb-2 border-b-2 border-[#e2e8f0]">
             Form Informasi User
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="flex flex-col gap-3 sm:gap-4">
             {data.userFields.map(field => (
               <FieldRecap
                 key={field.id}
@@ -278,23 +328,28 @@ export default function ResultDetailPage() {
         </div>
       )}
 
-      {/* Pertanyaan Survey */}
+      {/* ── Pertanyaan Survey ── */}
       {data.questions.length > 0 && (
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f3c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #e2e8f0' }}>
+          <h3 className="text-[15px] sm:text-[16px] font-bold text-[#0d1f3c] mb-4 pb-2 border-b-2 border-[#e2e8f0]">
             Pertanyaan Survey
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {data.questions.map(question => (
-              <FieldRecap
-                key={question.id}
-                field={question}
-                answers={data.questionAnswers.filter(a => a.question_id === question.id)}
-              />
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {data.questions.map((question, i) => (
+              <div key={question.id}>
+                <p className="text-[11px] font-bold text-[#1B6FA8] tracking-[1px] uppercase mb-2">
+                  Pertanyaan {i + 1}
+                </p>
+                <FieldRecap
+                  field={question}
+                  answers={data.questionAnswers.filter(a => a.question_id === question.id)}
+                />
+              </div>
             ))}
           </div>
         </div>
       )}
+
     </div>
   )
 }

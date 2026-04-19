@@ -23,6 +23,9 @@ export default function SurveyIdentityPage() {
   const [loading, setLoading] = useState(true)
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // Ganti menjadi
+  const [entities, setEntities] = useState<{ id: string; name: string; level: number; parent_id: string | null; is_active: boolean }[]>([])
+  const [entitySelections, setEntitySelections] = useState<Record<string, { l1: string; l2: string; l3: string }>>({})
 
   useEffect(() => {
     fetch(`/api/survey/${surveyId}`)
@@ -36,6 +39,14 @@ export default function SurveyIdentityPage() {
           init[f.id] = f.type === 'checkbox' ? [] : ''
         })
         setAnswers(init)
+
+        // Fetch entities jika ada field bertipe entity
+        const hasEntity = d.userFields.some((f: UserField) => f.type === 'entity')
+        if (hasEntity) {
+          fetch('/api/master/entities')
+            .then((r) => r.json())
+            .then((d) => setEntities(d.entities || []))
+        }
       })
       .finally(() => setLoading(false))
   }, [surveyId])
@@ -69,6 +80,27 @@ export default function SurveyIdentityPage() {
     sessionStorage.setItem(`survey_identity_${surveyId}`, JSON.stringify(answers))
     router.push(`/survey/${surveyId}/questions`)
   }
+
+  const setEntityLevel = (fieldId: string, level: 1 | 2 | 3, value: string) => {
+    setEntitySelections((prev) => {
+      const current = prev[fieldId] || { l1: '', l2: '', l3: '' }
+      const next = { ...current }
+      if (level === 1) { next.l1 = value; next.l2 = ''; next.l3 = '' }
+      if (level === 2) { next.l2 = value; next.l3 = '' }
+      if (level === 3) { next.l3 = value }
+      // Simpan value paling dalam yang dipilih ke answers
+      const finalValue = next.l3 || next.l2 || next.l1
+      setValue(fieldId, finalValue)
+      return { ...prev, [fieldId]: next }
+    })
+  }
+
+  const getEntityChildren = (parentId: string) =>
+    entities.filter((e) => e.parent_id === parentId && e.is_active !== false)
+
+  const getEntityRoots = () =>
+    entities.filter((e) => e.level === 1)
+
 
   return (
     <>
@@ -334,23 +366,70 @@ export default function SurveyIdentityPage() {
                   </div>
                 )}
 
-                {field.type === 'rating' && (
-                  <div className="rating-row">
-                    {Array.from(
-                      { length: (field.rating_max ?? 5) - (field.rating_min ?? 1) + 1 },
-                      (_, i) => (field.rating_min ?? 1) + i
-                    ).map((n) => (
-                      <button
-                        key={n}
-                        className={`rating-btn ${answers[field.id] === String(n) ? 'selected' : ''}`}
-                        onClick={() => setValue(field.id, String(n))}
-                        type="button"
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {field.type === 'entity' && (() => {
+                  const sel = entitySelections[field.id] || { l1: '', l2: '', l3: '' }
+                  const level2Options = sel.l1 ? getEntityChildren(sel.l1) : []
+                  const level3Options = sel.l2 ? getEntityChildren(sel.l2) : []
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {/* Level 1 */}
+                      <div>
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
+                          Entitas Utama
+                        </p>
+                        <select
+                          className="f-select"
+                          value={sel.l1}
+                          onChange={(e) => setEntityLevel(field.id, 1, e.target.value)}
+                        >
+                          <option value="">-- Pilih entitas --</option>
+                          {getEntityRoots().map((e) => (
+                            <option key={e.id} value={e.id}>{e.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level 2 — muncul setelah level 1 dipilih */}
+                      {sel.l1 && level2Options.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
+                            Anak Perusahaan
+                          </p>
+                          <select
+                            className="f-select"
+                            value={sel.l2}
+                            onChange={(e) => setEntityLevel(field.id, 2, e.target.value)}
+                          >
+                            <option value="">-- Pilih anak perusahaan --</option>
+                            {level2Options.map((e) => (
+                              <option key={e.id} value={e.id}>{e.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Level 3 — muncul setelah level 2 dipilih */}
+                      {sel.l2 && level3Options.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
+                            Cabang/Unit
+                          </p>
+                          <select
+                            className="f-select"
+                            value={sel.l3}
+                            onChange={(e) => setEntityLevel(field.id, 3, e.target.value)}
+                          >
+                            <option value="">-- Pilih cabang/unit --</option>
+                            {level3Options.map((e) => (
+                              <option key={e.id} value={e.id}>{e.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {errors[field.id] && (
                   <p className="field-error">⚠ {errors[field.id]}</p>

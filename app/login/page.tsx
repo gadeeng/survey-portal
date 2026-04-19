@@ -3,6 +3,118 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// ====================== REACT BITS BACKGROUND COMPONENTS ======================
+
+const StarField = () => {
+  const stars = [
+    { top: '7%', left: '10%', size: 2, delay: '0s' },
+    { top: '5%', left: '25%', size: 2, delay: '.7s' },
+    { top: '11%', left: '42%', size: 3, delay: '1.3s' },
+    { top: '4%', left: '60%', size: 2, delay: '.2s' },
+    { top: '9%', left: '75%', size: 2, delay: '1.8s' },
+    { top: '6%', left: '88%', size: 3, delay: '.5s' },
+    { top: '17%', left: '18%', size: 2, delay: '2s' },
+    { top: '14%', left: '53%', size: 2, delay: '1s' },
+    { top: '19%', left: '70%', size: 2, delay: '.4s' },
+    { top: '3%', left: '36%', size: 2, delay: '1.6s' },
+    { top: '13%', left: '82%', size: 3, delay: '2.3s' },
+  ]
+
+  return (
+    <>
+      {stars.map((s, i) => (
+        <div
+          key={i}
+          className="star"
+          style={{
+            top: s.top,
+            left: s.left,
+            width: s.size,
+            height: s.size,
+            animationDelay: s.delay,
+          }}
+        />
+      ))}
+    </>
+  )
+}
+
+const Buoy = ({ left, colorTop, colorBody, animationDuration, animationDelay }: {
+  left: string
+  colorTop: string
+  colorBody: string
+  animationDuration: string
+  animationDelay?: string
+}) => (
+  <div
+    className="buoy"
+    style={{
+      bottom: 72,
+      left,
+      animationDuration,
+      animationDelay: animationDelay || '0s',
+    }}
+  >
+    <svg width="14" height="30" viewBox="0 0 14 30">
+      <rect x="5" y="0" width="4" height="2" rx="1" fill={colorTop} />
+      <ellipse cx="7" cy="17" rx="6" ry="9" fill={colorBody} />
+      <rect x="4" y="9" width="6" height="3" fill="#f9fafb" opacity=".75" />
+      <rect x="4" y="15" width="6" height="3" fill={colorBody === '#dc2626' ? '#b91c1c' : '#15803d'} />
+      <rect x="6" y="26" width="2" height="4" fill="#6b7280" />
+    </svg>
+  </div>
+)
+
+const Ship = () => (
+  <div className="ship-wrap">
+    <svg width="300" height="112" viewBox="0 0 300 112">
+      {/* Hull */}
+      <polygon points="18,72 282,72 262,94 38,94" fill="#1e3a5f" />
+      <rect x="38" y="94" width="224" height="12" rx="6" fill="#163152" />
+      {/* Superstructure */}
+      <rect x="84" y="28" width="132" height="44" rx="3" fill="#1e4976" />
+      <rect x="96" y="16" width="88" height="14" rx="2" fill="#245a8a" />
+      {/* Windows */}
+      {[88, 112, 136, 160, 184, 200].map((x, i) => (
+        <rect key={i} x={x} y="34" width="16" height="12" rx="1" fill="#A9D6E5" opacity=".8" />
+      ))}
+      {/* Bow cabin */}
+      <rect x="48" y="40" width="28" height="32" rx="2" fill="#1a3d6e" />
+      <rect x="52" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
+      <rect x="62" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
+      {/* Stern cabin */}
+      <rect x="224" y="40" width="28" height="32" rx="2" fill="#1a3d6e" />
+      <rect x="228" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
+      <rect x="238" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
+      {/* Mast + flag */}
+      <rect x="147" y="4" width="4" height="14" fill="#e5e7eb" />
+      <polygon points="151,4 178,10 151,17" fill="#ef4444" opacity=".9" />
+      {/* Containers */}
+      <rect x="88" y="55" width="32" height="14" rx="1" fill="#2563eb" opacity=".65" />
+      <rect x="124" y="55" width="32" height="14" rx="1" fill="#dc2626" opacity=".65" />
+      <rect x="160" y="55" width="32" height="14" rx="1" fill="#16a34a" opacity=".65" />
+      {/* Bow wave & waterline */}
+      <polygon points="18,72 2,82 38,94" fill="#163152" />
+      <rect x="38" y="88" width="224" height="4" rx="2" fill="#A9D6E5" opacity=".15" />
+    </svg>
+  </div>
+)
+
+const WaveLayer = ({ className, path, fill, opacity }: {
+  className: string
+  path: string
+  fill: string
+  opacity?: number
+}) => (
+  <div className={`wave-wrap ${className}`}>
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
+      <path d={path} fill={fill} opacity={opacity || 1} />
+    </svg>
+  </div>
+)
+
+// ====================== MAIN LOGIN PAGE ======================
+
 export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState('')
@@ -94,7 +206,7 @@ export default function LoginPage() {
           50%      { transform: translateY(-5px); }
         }
 
-        /* Form card */
+        /* Form card (sama persis) */
         .form-card {
           position: relative; z-index: 10;
           background: #ffffff; border-radius: 16px;
@@ -134,41 +246,18 @@ export default function LoginPage() {
         .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
         .form-footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f4f8; text-align: center; font-size: 12px; color: #b0bec5; }
 
-        /* === PASSWORD TOGGLE === */
-        .password-wrapper {
-          position: relative;
-        }
-        .password-input {
-          padding-right: 50px !important;
-        }
+        /* Password toggle */
+        .password-wrapper { position: relative; }
+        .password-input { padding-right: 50px !important; }
         .password-toggle {
-          position: absolute;
-          right: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-          width: 24px;
-          height: 24px;
-          transition: color .2s;
+          position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+          background: transparent; border: none; cursor: pointer;
+          padding: 4px; display: flex; align-items: center; justify-content: center;
+          color: #64748b; width: 24px; height: 24px; transition: color .2s;
         }
-        .password-toggle:hover {
-          color: #1B6FA8;
-        }
-        .password-toggle:focus {
-          outline: 2px solid #1B6FA8;
-          outline-offset: 2px;
-        }
-        .password-toggle svg {
-          width: 20px;
-          height: 20px;
-        }
+        .password-toggle:hover { color: #1B6FA8; }
+        .password-toggle:focus { outline: 2px solid #1B6FA8; outline-offset: 2px; }
+        .password-toggle svg { width: 20px; height: 20px; }
 
         /* Logo */
         .login-logo { position: absolute; top: 36px; left: 48px; z-index: 10; }
@@ -176,108 +265,54 @@ export default function LoginPage() {
       `}</style>
 
       <div className="login-root">
-
-        {/* Stars */}
-        {[
-          { top: '7%', left: '10%', size: 2, delay: '0s' },
-          { top: '5%', left: '25%', size: 2, delay: '.7s' },
-          { top: '11%', left: '42%', size: 3, delay: '1.3s' },
-          { top: '4%', left: '60%', size: 2, delay: '.2s' },
-          { top: '9%', left: '75%', size: 2, delay: '1.8s' },
-          { top: '6%', left: '88%', size: 3, delay: '.5s' },
-          { top: '17%', left: '18%', size: 2, delay: '2s' },
-          { top: '14%', left: '53%', size: 2, delay: '1s' },
-          { top: '19%', left: '70%', size: 2, delay: '.4s' },
-          { top: '3%', left: '36%', size: 2, delay: '1.6s' },
-          { top: '13%', left: '82%', size: 3, delay: '2.3s' },
-        ].map((s, i) => (
-          <div key={i} className="star" style={{
-            top: s.top, left: s.left,
-            width: s.size, height: s.size,
-            animationDelay: s.delay,
-          }} />
-        ))}
+        {/* Background React Bits Components */}
+        <StarField />
 
         {/* Left red buoy */}
-        <div className="buoy" style={{ bottom: 72, left: '16%', animationDuration: '3.8s' }}>
-          <svg width="14" height="30" viewBox="0 0 14 30">
-            <rect x="5" y="0" width="4" height="2" rx="1" fill="#f59e0b" />
-            <ellipse cx="7" cy="17" rx="6" ry="9" fill="#dc2626" />
-            <rect x="4" y="9" width="6" height="3" fill="#f9fafb" opacity=".75" />
-            <rect x="4" y="15" width="6" height="3" fill="#b91c1c" />
-            <rect x="6" y="26" width="2" height="4" fill="#6b7280" />
-          </svg>
-        </div>
+        <Buoy
+          left="16%"
+          colorTop="#f59e0b"
+          colorBody="#dc2626"
+          animationDuration="3.8s"
+        />
 
         {/* Right green buoy */}
-        <div className="buoy" style={{ bottom: 72, left: '82%', animationDuration: '4.2s', animationDelay: '1.2s' }}>
-          <svg width="14" height="30" viewBox="0 0 14 30">
-            <rect x="5" y="0" width="4" height="2" rx="1" fill="#22c55e" />
-            <ellipse cx="7" cy="17" rx="6" ry="9" fill="#16a34a" />
-            <rect x="4" y="9" width="6" height="3" fill="#f9fafb" opacity=".75" />
-            <rect x="4" y="15" width="6" height="3" fill="#15803d" />
-            <rect x="6" y="26" width="2" height="4" fill="#6b7280" />
-          </svg>
-        </div>
+        <Buoy
+          left="82%"
+          colorTop="#22c55e"
+          colorBody="#16a34a"
+          animationDuration="4.2s"
+          animationDelay="1.2s"
+        />
 
         {/* Cargo ship */}
-        <div className="ship-wrap">
-          <svg width="300" height="112" viewBox="0 0 300 112">
-            {/* Hull */}
-            <polygon points="18,72 282,72 262,94 38,94" fill="#1e3a5f" />
-            <rect x="38" y="94" width="224" height="12" rx="6" fill="#163152" />
-            {/* Superstructure */}
-            <rect x="84" y="28" width="132" height="44" rx="3" fill="#1e4976" />
-            <rect x="96" y="16" width="88" height="14" rx="2" fill="#245a8a" />
-            {/* Windows row */}
-            {[88, 112, 136, 160, 184, 200].map((x, i) => (
-              <rect key={i} x={x} y="34" width="16" height="12" rx="1" fill="#A9D6E5" opacity=".8" />
-            ))}
-            {/* Bow cabin */}
-            <rect x="48" y="40" width="28" height="32" rx="2" fill="#1a3d6e" />
-            <rect x="52" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
-            <rect x="62" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
-            {/* Stern cabin */}
-            <rect x="224" y="40" width="28" height="32" rx="2" fill="#1a3d6e" />
-            <rect x="228" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
-            <rect x="238" y="44" width="8" height="11" rx="1" fill="#A9D6E5" opacity=".7" />
-            {/* Mast + flag */}
-            <rect x="147" y="4" width="4" height="14" fill="#e5e7eb" />
-            <polygon points="151,4 178,10 151,17" fill="#ef4444" opacity=".9" />
-            {/* Containers on deck */}
-            <rect x="88" y="55" width="32" height="14" rx="1" fill="#2563eb" opacity=".65" />
-            <rect x="124" y="55" width="32" height="14" rx="1" fill="#dc2626" opacity=".65" />
-            <rect x="160" y="55" width="32" height="14" rx="1" fill="#16a34a" opacity=".65" />
-            {/* Bow wave detail */}
-            <polygon points="18,72 2,82 38,94" fill="#163152" />
-            {/* Waterline stripe */}
-            <rect x="38" y="88" width="224" height="4" rx="2" fill="#A9D6E5" opacity=".15" />
-          </svg>
-        </div>
+        <Ship />
 
-        {/* Waves — back to front */}
-        <div className="wave-wrap wave-back">
-          <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
-            <path d="M0,45 C180,20 360,70 540,45 C720,20 900,70 1080,45 C1260,20 1440,60 1440,45 L1440,90 L0,90 Z" fill="#1B6FA8" opacity=".35" />
-          </svg>
-        </div>
-        <div className="wave-wrap wave-mid">
-          <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
-            <path d="M0,50 C240,22 480,78 720,50 C960,22 1200,72 1440,50 L1440,90 L0,90 Z" fill="#1565a0" opacity=".55" />
-          </svg>
-        </div>
-        <div className="wave-wrap wave-front">
-          <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
-            <path d="M0,40 C200,10 400,72 600,40 C800,10 1000,68 1200,40 C1320,24 1380,52 1440,40 L1440,90 L0,90 Z" fill="#0d4f7a" />
-          </svg>
-        </div>
+        {/* Waves */}
+        <WaveLayer
+          className="wave-back"
+          path="M0,45 C180,20 360,70 540,45 C720,20 900,70 1080,45 C1260,20 1440,60 1440,45 L1440,90 L0,90 Z"
+          fill="#1B6FA8"
+          opacity={0.35}
+        />
+        <WaveLayer
+          className="wave-mid"
+          path="M0,50 C240,22 480,78 720,50 C960,22 1200,72 1440,50 L1440,90 L0,90 Z"
+          fill="#1565a0"
+          opacity={0.55}
+        />
+        <WaveLayer
+          className="wave-front"
+          path="M0,40 C200,10 400,72 600,40 C800,10 1000,68 1200,40 C1320,24 1380,52 1440,40 L1440,90 L0,90 Z"
+          fill="#0d4f7a"
+        />
 
         {/* Logo */}
         <div className="login-logo">
           <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
         </div>
 
-        {/* Form card */}
+        {/* Form card (tidak diubah) */}
         <div className="form-card">
           <p className="form-eyebrow">Akses Portal</p>
           <h2 className="form-title">Selamat Datang</h2>
@@ -313,12 +348,10 @@ export default function LoginPage() {
                   aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                 >
                   {showPassword ? (
-                    // Eye-slash (hide)
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908L3 3m3.75 3.75L21 21" />
                     </svg>
                   ) : (
-                    // Eye (show)
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5 16.477 5 20.268 7.943 21.542 12 20.268 16.057 16.477 19 12 19 7.523 19 3.732 16.057 2.458 12z" />

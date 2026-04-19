@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
 
@@ -8,6 +9,12 @@ export async function GET(
 ) {
   const { id } = await params
   const supabase = await createClient()
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('user_session')
+
+  if (!sessionCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { data: userFields } = await supabase
     .from('survey_user_fields')
@@ -38,6 +45,28 @@ export async function GET(
     .select('*')
     .in('response_id', responseIds.length > 0 ? responseIds : ['none'])
 
+  const { data: entities } = await supabase
+    .from('entities')
+    .select('id, name')
+
+  const entityMap: Record<string, string> = {}
+  entities?.forEach(e => { entityMap[e.id] = e.name })
+
+  const entityFieldIds = new Set(
+    userFields?.filter(f => f.type === 'entity').map(f => f.id) || []
+  )
+
+  const formatValue = (value: string, fieldId: string, isEntity: boolean) => {
+    if (!value) return ''
+
+    if (isEntity && entityMap[value]) return entityMap[value]
+
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) return parsed.join(', ')
+    } catch { }
+    return value
+  }
   // Build Excel rows
   const headers = [
     'No',
@@ -49,11 +78,11 @@ export async function GET(
   const rows = (responses || []).map((response, i) => {
     const userAnswers = (userFields || []).map(field => {
       const ans = userFieldAnswers?.find(a => a.response_id === response.id && a.field_id === field.id)
-      return ans?.value || ''
+      return formatValue(ans?.value || '', field.id, entityFieldIds.has(field.id))
     })
     const qAnswers = (questions || []).map(question => {
       const ans = questionAnswers?.find(a => a.response_id === response.id && a.question_id === question.id)
-      return ans?.value || ''
+      return formatValue(ans?.value || '', question.id, false)
     })
     return [i + 1, new Date(response.submitted_at).toLocaleString('id-ID'), ...userAnswers, ...qAnswers]
   })

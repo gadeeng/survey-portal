@@ -50,12 +50,30 @@ export async function GET(
     .select('*')
     .in('response_id', responseIds.length > 0 ? responseIds : ['none'])
 
+  const { data: entities } = await supabase
+    .from('entities')
+    .select('id, name')
+
+  const entityMap: Record<string, string> = {}
+  entities?.forEach(e => { entityMap[e.id] = e.name })
+
+  const entityFieldIds = new Set(
+    userFields?.filter(f => f.type === 'entity').map(f => f.id) || []
+  )
+
+  const mappedUserFieldAnswers = (userFieldAnswers || []).map(answer => {
+    if (entityFieldIds.has(answer.field_id) && entityMap[answer.value]) {
+      return { ...answer, value: entityMap[answer.value] }
+    }
+    return answer
+  })
+
   return NextResponse.json({
     survey,
     userFields: userFields || [],
     questions: questions || [],
     totalResponses,
-    userFieldAnswers: userFieldAnswers || [],
+    userFieldAnswers: mappedUserFieldAnswers,
     questionAnswers: questionAnswers || []
   })
 }
