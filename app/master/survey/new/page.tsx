@@ -558,6 +558,7 @@ export default function NewSurveyPage() {
   const [showConfirmPublish, setShowConfirmPublish] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [spreadsheetWebhookUrl, setSpreadsheetWebhookUrl] = useState('')
   const [userFields, setUserFields] = useState<UserField[]>([
     { label: '', type: 'short_text', options: [], rating_min: 1, rating_max: 5 },
   ])
@@ -581,7 +582,7 @@ export default function NewSurveyPage() {
       const res = await fetch('/api/master/surveys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status, userFields, questions }),
+        body: JSON.stringify({ title, description, status, userFields, questions, spreadsheetWebhookUrl }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Terjadi kesalahan'); return }
@@ -625,10 +626,22 @@ export default function NewSurveyPage() {
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                 className="survey-input" placeholder="Contoh: Survey Kepuasan Pelanggan Q1 2025" />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group">
               <label className="field-label">Deskripsi <span className="field-optional">(opsional)</span></label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)}
                 className="survey-textarea" placeholder="Deskripsi singkat tentang survey ini..." rows={3} />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="field-label">Link Webhook Google Sheets <span className="field-required">*</span></label>
+              <input type="url" value={spreadsheetWebhookUrl} onChange={(e) => setSpreadsheetWebhookUrl(e.target.value)}
+                className="survey-input" placeholder="https://script.google.com/macros/s/.../exec" />
+              <div className="info-box" style={{ marginTop: 8 }}>
+                <strong>📋 Cara mendapatkan URL:</strong><br />
+                1. Buka Google Spreadsheet → Extensions → Apps Script<br />
+                2. Paste script template (<a href="/google-apps-script-template.js" target="_blank" style={{ color: '#1B6FA8' }}>download di sini</a>)<br />
+                3. Deploy → New deployment → Web app → Deploy<br />
+                4. Copy URL yang muncul, paste di sini
+              </div>
             </div>
           </div>
           {error && <div className="error-msg">{error}</div>}
@@ -636,6 +649,8 @@ export default function NewSurveyPage() {
             <div />
             <button className="btn-next" onClick={() => {
               if (!title.trim()) { setError('Judul survey wajib diisi'); return }
+              if (!spreadsheetWebhookUrl.trim()) { setError('Link Webhook Google Sheets wajib diisi'); return }
+              if (!spreadsheetWebhookUrl.startsWith('https://script.google.com/')) { setError('URL webhook harus berupa URL Google Apps Script yang valid'); return }
               setError(''); setStep(2)
             }}>Lanjut →</button>
           </div>
@@ -729,6 +744,14 @@ export default function NewSurveyPage() {
               <div className="review-section">
                 <p className="review-label">Deskripsi</p>
                 <p className="review-desc">{description}</p>
+              </div>
+            )}
+            {spreadsheetWebhookUrl && (
+              <div className="review-section">
+                <p className="review-label">Google Sheets Webhook</p>
+                <p className="review-desc" style={{ fontSize: 13, wordBreak: 'break-all' }}>
+                  ✅ {spreadsheetWebhookUrl}
+                </p>
               </div>
             )}
             <div className="review-divider" />

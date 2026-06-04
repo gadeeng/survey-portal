@@ -4,7 +4,9 @@ import { verifySession } from '@/lib/session'
 
 export async function GET() {
   const session = await verifySession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.role !== 'super_admin' && session.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const supabase = await createClient()
 

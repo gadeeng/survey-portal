@@ -2,6 +2,12 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
 const secretKey = process.env.JWT_SECRET_KEY || 'pelindo-survey-super-secret-key-change-me'
+if (
+  process.env.NODE_ENV === 'production' &&
+  (!process.env.JWT_SECRET_KEY || process.env.JWT_SECRET_KEY === 'pelindo-survey-super-secret-key-change-me')
+) {
+  throw new Error('JWT_SECRET_KEY must be set to a secure unique key in production environment!')
+}
 const key = new TextEncoder().encode(secretKey)
 
 export interface SessionPayload {
@@ -47,6 +53,7 @@ export async function createSession(payload: SessionPayload) {
   cookieStore.set('user_session', session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     expires: expires,
     path: '/',
   })

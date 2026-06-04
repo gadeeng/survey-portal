@@ -14,12 +14,17 @@ export async function PATCH(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const body = await request.json()
+  const { name, parent_id, level } = await request.json()
   const supabase = await createClient()
+
+  const updateData: Record<string, any> = {}
+  if (name !== undefined) updateData.name = name
+  if (parent_id !== undefined) updateData.parent_id = parent_id || null
+  if (level !== undefined) updateData.level = level
 
   const { error } = await supabase
     .from('entities')
-    .update(body)
+    .update(updateData)
     .eq('id', id)
 
   if (error) {

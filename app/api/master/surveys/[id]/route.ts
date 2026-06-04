@@ -8,7 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await verifySession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.role !== 'super_admin' && session.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { id } = await params
   const supabase = await createClient()
@@ -42,10 +44,28 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await verifySession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.role !== 'super_admin' && session.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { id } = await params
-  const { title, description, status, userFields, questions } = await request.json()
+  const { title, description, status, userFields, questions, spreadsheetWebhookUrl } = await request.json()
+
+  // Validate webhook URL if provided to prevent SSRF
+  if (spreadsheetWebhookUrl) {
+    try {
+      const url = new URL(spreadsheetWebhookUrl)
+      if (url.protocol !== 'https:' || !spreadsheetWebhookUrl.startsWith('https://script.google.com/')) {
+        return NextResponse.json(
+          { error: 'URL webhook harus berupa URL Google Apps Script yang valid (https://script.google.com/...)' },
+          { status: 400 }
+        )
+      }
+    } catch {
+      return NextResponse.json({ error: 'URL webhook tidak valid' }, { status: 400 })
+    }
+  }
+
   const supabase = await createClient()
 
   // Update survey
@@ -54,7 +74,8 @@ export async function PUT(
     .update({
       title, description, status,
       updated_at: new Date().toISOString(),
-      published_at: status === 'active' ? new Date().toISOString() : null
+      published_at: status === 'active' ? new Date().toISOString() : null,
+      spreadsheet_webhook_url: spreadsheetWebhookUrl || null,
     })
     .eq('id', id)
 

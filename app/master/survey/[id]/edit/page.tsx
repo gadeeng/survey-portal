@@ -374,6 +374,7 @@ export default function EditSurveyPage() {
   const [step, setStep] = useState(1)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [spreadsheetWebhookUrl, setSpreadsheetWebhookUrl] = useState('')
   const [userFields, setUserFields] = useState<UserField[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [showConfirmPublish, setShowConfirmPublish] = useState(false)
@@ -387,6 +388,7 @@ export default function EditSurveyPage() {
     if (!res.ok) { router.push('/master'); return }
     setTitle(data.survey.title)
     setDescription(data.survey.description || '')
+    setSpreadsheetWebhookUrl(data.survey.spreadsheet_webhook_url || '')
     setUserFields(data.userFields.map((f: UserField) => ({ ...f, options: f.options || [], rating_min: f.rating_min || 1, rating_max: f.rating_max || 5 })))
     setQuestions(data.questions.map((q: Question) => ({ ...q, options: q.options || [], rating_min: q.rating_min || 1, rating_max: q.rating_max || 5 })))
     setLoading(false)
@@ -408,7 +410,7 @@ export default function EditSurveyPage() {
       const res = await fetch(`/api/master/surveys/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status, userFields, questions }),
+        body: JSON.stringify({ title, description, status, userFields, questions, spreadsheetWebhookUrl }),
       })
       const text = await res.text()
       if (!res.ok) { const d = text ? JSON.parse(text) : {}; setError(d.error || 'Terjadi kesalahan'); return }
@@ -459,14 +461,32 @@ export default function EditSurveyPage() {
             <label style={labelStyle}>Judul Survey <span style={{ color: '#e53e3e' }}>*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} placeholder="Judul survey" />
           </div>
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Deskripsi</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)}
               style={{ ...inputStyle, height: 88, resize: 'vertical' }} placeholder="Deskripsi singkat..." />
           </div>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Link Webhook Google Sheets <span style={{ color: '#e53e3e' }}>*</span></label>
+            <input type="url" value={spreadsheetWebhookUrl} onChange={(e) => setSpreadsheetWebhookUrl(e.target.value)} style={inputStyle} placeholder="https://script.google.com/macros/s/.../exec" />
+            <div style={{ background: '#ebf8ff', border: '1px solid #bee3f8', borderRadius: 8, padding: '10px 14px', marginTop: 8 }}>
+              <p style={{ fontSize: 13, color: '#2C8FC3', margin: 0 }}>
+                <strong>📋 Cara mendapatkan URL:</strong><br />
+                1. Buka Google Spreadsheet → Extensions → Apps Script<br />
+                2. Paste script template (<a href="/google-apps-script-template.js" target="_blank" style={{ color: '#1B6FA8', textDecoration: 'underline' }}>download di sini</a>)<br />
+                3. Deploy → New deployment → Web app → Deploy<br />
+                4. Copy URL yang muncul, paste di sini
+              </p>
+            </div>
+          </div>
           {error && <p style={{ color: '#e53e3e', fontSize: 13, marginBottom: 10 }}>{error}</p>}
           <div className="step-nav" style={{ justifyContent: 'flex-end' }}>
-            <button onClick={() => { if (!title.trim()) { setError('Judul wajib diisi'); return } setError(''); setStep(2) }} style={btnPrimary}>
+            <button onClick={() => {
+              if (!title.trim()) { setError('Judul wajib diisi'); return }
+              if (!spreadsheetWebhookUrl.trim()) { setError('Link Webhook Google Sheets wajib diisi'); return }
+              if (!spreadsheetWebhookUrl.startsWith('https://script.google.com/')) { setError('URL webhook harus berupa URL Google Apps Script yang valid'); return }
+              setError(''); setStep(2)
+            }} style={btnPrimary}>
               Lanjut →
             </button>
           </div>
@@ -575,6 +595,13 @@ export default function EditSurveyPage() {
                 <div style={{ padding: '12px 14px', background: '#f7fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: '#718096', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>Deskripsi</p>
                   <p style={{ fontSize: 13, color: '#4a5568' }}>{description}</p>
+                </div>
+              )}
+              {/* Webhook Google Sheets */}
+              {spreadsheetWebhookUrl && (
+                <div style={{ padding: '12px 14px', background: '#f7fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: '#718096', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>Google Sheets Webhook</p>
+                  <p style={{ fontSize: 13, color: '#4a5568', wordBreak: 'break-all' }}>✅ {spreadsheetWebhookUrl}</p>
                 </div>
               )}
               {/* Form User */}

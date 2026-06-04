@@ -4,8 +4,8 @@ import { verifySession } from '@/lib/session'
 
 export async function GET() {
   const session = await verifySession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.role !== 'super_admin' && session.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const supabase = await createClient()
@@ -24,12 +24,26 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await verifySession()
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || (session.role !== 'super_admin' && session.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { title, description, status, userFields, questions } = await request.json()
+  const { title, description, status, userFields, questions, spreadsheetWebhookUrl } = await request.json()
+
+  // Validate webhook URL if provided to prevent SSRF
+  if (spreadsheetWebhookUrl) {
+    try {
+      const url = new URL(spreadsheetWebhookUrl)
+      if (url.protocol !== 'https:' || !spreadsheetWebhookUrl.startsWith('https://script.google.com/')) {
+        return NextResponse.json(
+          { error: 'URL webhook harus berupa URL Google Apps Script yang valid (https://script.google.com/...)' },
+          { status: 400 }
+        )
+      }
+    } catch {
+      return NextResponse.json({ error: 'URL webhook tidak valid' }, { status: 400 })
+    }
+  }
 
   const supabase = await createClient()
 
@@ -40,7 +54,8 @@ export async function POST(request: NextRequest) {
       description,
       status,
       created_by: session.id,
-      published_at: status === 'active' ? new Date().toISOString() : null
+      published_at: status === 'active' ? new Date().toISOString() : null,
+      spreadsheet_webhook_url: spreadsheetWebhookUrl || null,
     })
     .select()
     .single()
