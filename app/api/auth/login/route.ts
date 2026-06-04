@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import bcrypt from 'bcryptjs'
+import { encrypt } from '@/lib/session'
 
 export async function POST(request: NextRequest) {
   const { username, password } = await request.json()
@@ -34,11 +35,13 @@ export async function POST(request: NextRequest) {
     user: { id: user.id, username: user.username, role: user.role }
   })
 
-  response.cookies.set('user_session', JSON.stringify({
+  const sessionData = await encrypt({
     id: user.id,
     username: user.username,
     role: user.role
-  }), {
+  })
+
+  response.cookies.set('user_session', sessionData, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 8,

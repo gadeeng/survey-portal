@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { verifySession } from '@/lib/session'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('user_session')
+  const session = await verifySession()
 
-  if (!sessionCookie) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const session = JSON.parse(sessionCookie.value)
-  if (session.role !== 'super_admin') {
+  if (!session || session.role !== 'super_admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -39,17 +33,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('user_session')
+  const session = await verifySession()
 
-  if (!sessionCookie) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const session = JSON.parse(sessionCookie.value)
-  if (session.role !== 'super_admin') {
+  if (!session || session.role !== 'super_admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+
 
   // Cegah super_admin menghapus akunnya sendiri
   if (session.id === id) {

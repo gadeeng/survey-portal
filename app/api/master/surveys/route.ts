@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { verifySession } from '@/lib/session'
 
 export async function GET() {
+  const session = await verifySession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const supabase = await createClient()
 
   const { data: surveys, error } = await supabase
@@ -18,14 +23,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('user_session')
+  const session = await verifySession()
 
-  if (!sessionCookie) {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const session = JSON.parse(sessionCookie.value)
   const { title, description, status, userFields, questions } = await request.json()
 
   const supabase = await createClient()

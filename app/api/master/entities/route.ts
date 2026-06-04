@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { verifySession } from '@/lib/session'
 
 // GET - Ambil semua entitas
 export async function GET() {
+  const session = await verifySession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const supabase = await createClient()
 
   const { data: entities, error } = await supabase
@@ -21,15 +26,9 @@ export async function GET() {
 
 // POST - Tambah entitas baru
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('user_session')
+  const session = await verifySession()
 
-  if (!sessionCookie) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const session = JSON.parse(sessionCookie.value)
-  if (session.role !== 'super_admin') {
+  if (!session || session.role !== 'super_admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

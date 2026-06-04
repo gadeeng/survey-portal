@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
+import { verifySession } from '@/lib/session'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await verifySession()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { id } = await params
   const supabase = await createClient()
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('user_session')
-
-  if (!sessionCookie) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
 
   const { data: userFields } = await supabase
     .from('survey_user_fields')
