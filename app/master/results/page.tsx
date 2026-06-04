@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/fetcher'
 
 interface Survey {
   id: string
@@ -19,19 +21,10 @@ const statusConfig: Record<string, { label: string; badge: string; dot: string }
 }
 
 export default function ResultsPage() {
-  const [surveys, setSurveys] = useState<Survey[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    const fetchSurveys = async () => {
-      const res = await fetch('/api/master/results')
-      const data = await res.json()
-      setSurveys(data.surveys || [])
-      setLoading(false)
-    }
-    fetchSurveys()
-  }, [])
+  const { data, isLoading: loading } = useSWR('/api/master/results', fetcher)
+  const surveys: Survey[] = data?.surveys || []
 
   const filtered = surveys.filter((s) =>
     s.title.toLowerCase().includes(search.toLowerCase()) ||

@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/fetcher'
 
 interface Survey {
   id: string
@@ -361,26 +363,17 @@ function ShareLinkBox({ surveyId }: { surveyId: string }) {
 }
 
 export default function MasterDashboard() {
-  const [surveys, setSurveys] = useState<Survey[]>([])
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const [modal, setModal] = useState<ModalState>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [publishedSurvey, setPublishedSurvey] = useState<{ id: string; title: string } | null>(null)
 
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => d && setUser(d.user))
-    fetchSurveys()
-  }, [])
+  const { data: authData } = useSWR('/api/auth/me', fetcher)
+  const user = authData?.user
 
-  const fetchSurveys = async () => {
-    const res = await fetch('/api/master/surveys')
-    const data = await res.json()
-    setSurveys(data.surveys || [])
-    setLoading(false)
-  }
+  const { data: surveysData, isLoading: loading, mutate } = useSWR('/api/master/surveys', fetcher)
+  const surveys: Survey[] = surveysData?.surveys || []
 
   const handlePublish = async () => {
     if (!modal || modal.type !== 'publish') return
@@ -391,7 +384,7 @@ export default function MasterDashboard() {
     })
     setModal(null)
     setPublishedSurvey({ id, title })
-    fetchSurveys()
+    mutate()
   }
 
   const handleDeactivate = async () => {
@@ -401,7 +394,7 @@ export default function MasterDashboard() {
       body: JSON.stringify({ status: 'inactive' }),
     })
     setModal(null)
-    fetchSurveys()
+    mutate()
   }
 
   const handleDelete = async () => {
@@ -411,7 +404,7 @@ export default function MasterDashboard() {
     const data = await res.json()
     setModal(null)
     if (!res.ok) { setDeleteError(data.error); return }
-    fetchSurveys()
+    mutate()
   }
 
   const handleCopyLink = (surveyId: string) => {

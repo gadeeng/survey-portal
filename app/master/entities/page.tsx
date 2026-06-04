@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/fetcher'
 
 interface Entity {
   id: string
@@ -122,8 +124,6 @@ function ActionMenu({
 
 export default function EntitiesPage() {
   const router = useRouter()
-  const [entities, setEntities] = useState<Entity[]>([])
-  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null)
   const [name, setName] = useState('')
@@ -161,23 +161,19 @@ export default function EntitiesPage() {
     return matched
   }
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const res = await fetch('/api/auth/me')
-      if (!res.ok) { router.push('/login'); return }
-      const data = await res.json()
-      if (data.user.role !== 'super_admin') { router.push('/master'); return }
-      fetchEntities()
-    }
-    checkAuth()
-  }, [router])
+  const { data: authData, isLoading: authLoading, error: authError } = useSWR('/api/auth/me', fetcher)
+  const { data: entitiesData, isLoading: entitiesLoading, mutate } = useSWR('/api/master/entities', fetcher)
 
-  const fetchEntities = async () => {
-    const res = await fetch('/api/master/entities')
-    const data = await res.json()
-    setEntities(data.entities || [])
-    setLoading(false)
-  }
+  const entities: Entity[] = entitiesData?.entities || []
+  const loading = authLoading || entitiesLoading
+
+  useEffect(() => {
+    if (authError) {
+      router.push('/login')
+    } else if (authData && authData.user?.role !== 'super_admin') {
+      router.push('/master')
+    }
+  }, [authData, authError, router])
 
   const getLevel = (pid: string) => {
     if (!pid) return 1
@@ -219,7 +215,7 @@ export default function EntitiesPage() {
     }
 
     setName(''); setParentId(''); setShowForm(false); setEditingEntity(null)
-    fetchEntities()
+    mutate()
     setSubmitting(false)
   }
 
@@ -229,7 +225,7 @@ export default function EntitiesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !entity.is_active }),
     })
-    fetchEntities()
+    mutate()
   }
 
   const handleEdit = (entity: Entity) => {

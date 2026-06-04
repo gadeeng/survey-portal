@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/fetcher'
 
 interface MasterUser {
   id: string
@@ -15,8 +17,6 @@ interface MasterUser {
 
 export default function AccountsPage() {
   const router = useRouter()
-  const [users, setUsers] = useState<MasterUser[]>([])
-  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -25,23 +25,19 @@ export default function AccountsPage() {
   const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; username: string } | null>(null)
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const res = await fetch('/api/auth/me')
-      if (!res.ok) { router.push('/login'); return }
-      const data = await res.json()
-      if (data.user.role !== 'super_admin') { router.push('/master'); return }
-      fetchUsers()
-    }
-    checkAuth()
-  }, [router])
+  const { data: authData, isLoading: authLoading, error: authError } = useSWR('/api/auth/me', fetcher)
+  const { data: usersData, isLoading: usersLoading, mutate } = useSWR('/api/master/accounts', fetcher)
 
-  const fetchUsers = async () => {
-    const res = await fetch('/api/master/accounts')
-    const data = await res.json()
-    setUsers(data.users || [])
-    setLoading(false)
-  }
+  const users: MasterUser[] = usersData?.users || []
+  const loading = authLoading || usersLoading
+
+  useEffect(() => {
+    if (authError) {
+      router.push('/login')
+    } else if (authData && authData.user?.role !== 'super_admin') {
+      router.push('/master')
+    }
+  }, [authData, authError, router])
 
   const handleSubmit = async () => {
     if (!username || !password) { setError('Username dan password wajib diisi'); return }
@@ -58,7 +54,7 @@ export default function AccountsPage() {
     setUsername('')
     setPassword('')
     setShowForm(false)
-    fetchUsers()
+    mutate()
   }
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
@@ -67,7 +63,7 @@ export default function AccountsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentStatus }),
     })
-    fetchUsers()
+    mutate()
   }
 
   const handleDelete = async () => {
@@ -77,7 +73,7 @@ export default function AccountsPage() {
       const data = await res.json()
       setError(data.error)
     } else {
-      fetchUsers()
+      mutate()
     }
     setDeleteTarget(null)
   }
