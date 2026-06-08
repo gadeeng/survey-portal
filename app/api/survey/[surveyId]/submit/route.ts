@@ -183,8 +183,8 @@ export async function POST(
         values.push(answer ? (Array.isArray(answer.value) ? answer.value.join(', ') : (answer.value as string)) : '')
       }
 
-      // Fire-and-forget — tidak perlu await
-      sendToGoogleSheets(survey.spreadsheet_webhook_url, {
+      // Await diperlukan di serverless (Vercel) agar proses fetch selesai sebelum response direturn
+      await sendToGoogleSheets(survey.spreadsheet_webhook_url, {
         headers,
         values,
         timestamp: new Date().toISOString(),
