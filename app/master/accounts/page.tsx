@@ -204,7 +204,7 @@ export default function AccountsPage() {
                       </div>
                     </td>
                     {/* Tanggal */}
-                    <td className="px-5 py-3.5 align-middle text-[13px] text-[#8fa0b4]">
+                    <td className="px-5 py-3.5 align-middle text-[13px] text-[#8fa0b4]" suppressHydrationWarning>
                       {new Date(user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </td>
                     {/* Status */}
@@ -254,7 +254,7 @@ export default function AccountsPage() {
                     </span>
                     <div className="min-w-0">
                       <p className="font-bold text-[#0d1f3c] text-[14px] truncate">{user.username}</p>
-                      <p className="text-[11px] text-[#a0aec0] mt-0.5">
+                      <p className="text-[11px] text-[#a0aec0] mt-0.5" suppressHydrationWarning>
                         {new Date(user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>

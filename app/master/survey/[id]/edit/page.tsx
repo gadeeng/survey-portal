@@ -114,6 +114,12 @@ const globalCss = `
     /* FieldCard tighter */
     .field-card-controls { justify-content: flex-end; }
   }
+
+  /* Modal Styles */
+  @media (min-width: 541px) { .modal-overlay-flex { align-items: center !important; padding: 1rem !important; } }
+  .modal-sheet { background:#fff; width:100%; max-width:420px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.15); padding:1.5rem 1.25rem 2rem; border-radius: 20px 20px 0 0; }
+  .modal-handle { width:40px; height:4px; background:#e5e7eb; border-radius:2px; margin:0 auto 1.25rem; }
+  @media (min-width: 541px) { .modal-sheet { border-radius:20px; padding:2.5rem 2rem; } .modal-handle { display:none; } }
 `
 
 /* ── OptionsInput ─────────────────────────────────────────────────────────── */
@@ -286,12 +292,6 @@ function ConfirmPublishModal({ title, onConfirm, onCancel }: {
       className="modal-overlay-flex"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <style>{`
-        @media (min-width: 541px) { .modal-overlay-flex { align-items: center !important; padding: 1rem !important; } }
-        .modal-sheet { background:#fff; width:100%; max-width:420px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.15); padding:1.5rem 1.25rem 2rem; border-radius: 20px 20px 0 0; }
-        .modal-handle { width:40px; height:4px; background:#e5e7eb; border-radius:2px; margin:0 auto 1.25rem; }
-        @media (min-width: 541px) { .modal-sheet { border-radius:20px; padding:2.5rem 2rem; } .modal-handle { display:none; } }
-      `}</style>
       <div className="modal-sheet">
         <div className="modal-handle" />
         <div style={{ width: 60, height: 60, margin: '0 auto 1rem', background: '#fefce8', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>⚠️</div>

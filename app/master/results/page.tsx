@@ -107,7 +107,7 @@ export default function ResultsPage() {
                         {cfg.label}
                       </span>
                     </div>
-                    <p className="text-[13px] text-[#718096]">
+                    <p className="text-[13px] text-[#718096]" suppressHydrationWarning>
                       {survey.description || 'Tidak ada deskripsi'} · Dibuat {new Date(survey.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
@@ -149,7 +149,7 @@ export default function ResultsPage() {
                   </div>
 
                   {/* Description + date */}
-                  <p className="text-[12px] text-[#718096] mb-3 leading-relaxed">
+                  <p className="text-[12px] text-[#718096] mb-3 leading-relaxed" suppressHydrationWarning>
                     {survey.description || 'Tidak ada deskripsi'} · {new Date(survey.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
 

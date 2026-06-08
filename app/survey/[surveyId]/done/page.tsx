@@ -1,6 +1,5 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 
 const StarField = () => {
@@ -114,8 +113,6 @@ const WaveLayer = ({ className, path, fill, opacity }: {
 // ====================== DONE PAGE ======================
 
 function DoneContent() {
-  const searchParams = useSearchParams()
-  const responseId = searchParams.get('rid')
   const [timestamp, setTimestamp] = useState('')
   const [showCloseHint, setShowCloseHint] = useState(false)
 
@@ -236,13 +233,14 @@ function DoneContent() {
         }
         .done-info-value { font-size: 13px; font-weight: 600; color: #0d1f3c; }
 
-        /* Response ID */
-        .done-rid {
-          display: flex; align-items: center; justify-content: center; gap: 6px;
-          background: #f0f9ff; border: 1px dashed #93c5fd;
-          border-radius: 8px; padding: 9px 14px; margin: 14px 0 20px;
-          font-size: 11px; font-weight: 700; color: #1B6FA8;
-          font-family: monospace; letter-spacing: .7px;
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+          .done-root { flex-direction: column; justify-content: center; padding: 24px 16px; }
+          .done-logo { position: static; transform: none; margin-bottom: 32px; text-align: center; width: 100%; }
+          .done-logo img { height: 32px; max-width: 100%; }
+          .done-card { padding: 32px 24px 24px; width: 100%; }
+          .done-check-ring { width: 60px; height: 60px; margin-bottom: 16px; }
+          .done-check-ring svg { transform: scale(0.85); }
         }
 
         /* Button */
@@ -361,15 +359,7 @@ function DoneContent() {
             </div>
           </div>
 
-          {/* Response ID */}
-          {responseId && (
-            <div className="done-rid">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1B6FA8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-              </svg>
-              <span>ID Respons: {responseId.slice(0, 8).toUpperCase()}</span>
-            </div>
-          )}
+          <div style={{ height: 16 }} />
 
           <button
             className="done-btn"

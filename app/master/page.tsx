@@ -488,7 +488,7 @@ export default function MasterDashboard() {
                       <p className="survey-card-desc">
                         {survey.description || 'Tidak ada deskripsi'}
                       </p>
-                      <p className="survey-card-meta">
+                      <p className="survey-card-meta" suppressHydrationWarning>
                         Dibuat: {new Date(survey.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         {survey.published_at && (
                           <> · Dipublikasi: {new Date(survey.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</>
