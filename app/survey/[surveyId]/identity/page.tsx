@@ -43,7 +43,7 @@ export default function SurveyIdentityPage() {
         // Fetch entities jika ada field bertipe entity
         const hasEntity = d.userFields.some((f: UserField) => f.type === 'entity')
         if (hasEntity) {
-          fetch('/api/master/entities')
+          fetch('/api/survey/entities')
             .then((r) => r.json())
             .then((d) => setEntities(d.entities || []))
         }
