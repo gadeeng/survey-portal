@@ -128,10 +128,12 @@ function DoneContent() {
 
         .done-root {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex; align-items: center; justify-content: center;
           font-family: 'Plus Jakarta Sans', sans-serif;
           background: linear-gradient(180deg, #0d1f3c 0%, #1B6FA8 55%, #2C8FC3 100%);
-          position: relative; overflow: hidden; padding: 32px 16px;
+          position: relative; overflow-x: hidden; overflow-y: auto;
+          padding: 80px 16px 32px; /* room for logo bar on mobile */
         }
 
         /* Grid overlay */
@@ -188,12 +190,46 @@ function DoneContent() {
           50%      { transform: translateY(-5px); }
         }
 
+        /* ── Logo bar — Pelindo kiri & Danantara kanan pada mobile ── */
+        .done-logo {
+          position: absolute;
+          top: 16px;
+          left: 0;
+          right: 0;
+          width: 100%;
+          padding: 0 20px;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          transition: all 0.3s ease;
+        }
+        .done-logo img {
+          height: 28px;
+          width: auto;
+          object-fit: contain;
+          filter: brightness(0) invert(1);
+          opacity: .88;
+          transition: all 0.3s ease;
+        }
+        .done-logo img.original-logo {
+          filter: none;
+          opacity: 1;
+        }
+        .done-logo-divider {
+          display: none;
+          width: 1px;
+          height: 20px;
+          background-color: rgba(255, 255, 255, 0.4);
+          transition: all 0.3s ease;
+        }
+
         /* Card */
         .done-card {
           position: relative; z-index: 10;
           background: #ffffff; border-radius: 16px;
           border: 1px solid rgba(255,255,255,.15);
-          padding: 44px 40px 32px; width: 100%; max-width: 420px;
+          padding: 44px 24px 28px; width: 100%; max-width: 420px;
           box-shadow: 0 24px 64px rgba(13,31,60,.35), 0 4px 16px rgba(13,31,60,.2);
           animation: popIn .55s cubic-bezier(.34,1.56,.64,1) both;
         }
@@ -233,16 +269,6 @@ function DoneContent() {
         }
         .done-info-value { font-size: 13px; font-weight: 600; color: #0d1f3c; }
 
-        /* Mobile Optimization */
-        @media (max-width: 480px) {
-          .done-root { flex-direction: column; justify-content: center; padding: 24px 16px; }
-          .done-logo { position: static; transform: none; margin-bottom: 32px; text-align: center; width: 100%; }
-          .done-logo img { height: 32px; max-width: 100%; }
-          .done-card { padding: 32px 24px 24px; width: 100%; }
-          .done-check-ring { width: 60px; height: 60px; margin-bottom: 16px; }
-          .done-check-ring svg { transform: scale(0.85); }
-        }
-
         /* Button */
         .done-btn {
           width: 100%; height: 48px; border: none; border-radius: 8px;
@@ -251,6 +277,8 @@ function DoneContent() {
           font-family: 'Plus Jakarta Sans', sans-serif;
           cursor: pointer; transition: opacity .2s, transform .15s, box-shadow .2s;
           letter-spacing: .3px;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
         }
         .done-btn:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(27,111,168,.35); }
         .done-btn:active { transform: translateY(0); }
@@ -264,16 +292,58 @@ function DoneContent() {
           font-size: 12px; font-weight: 500; color: #16a34a;
         }
 
-        /* Logo */
-        .done-logo { position: absolute; top: 36px; left: 48px; z-index: 10; }
-        .done-logo img { height: 45px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: .88; }
-
         /* Pill badge */
         .done-pill {
           position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
           background: linear-gradient(90deg, #f59e0b, #f97316);
           color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .7px;
           text-transform: uppercase; padding: 3px 14px; border-radius: 20px; white-space: nowrap;
+        }
+
+        /* ── Tablet ── */
+        @media (min-width: 600px) {
+          .done-root {
+            padding: 32px 16px;
+            padding-top: 88px;
+          }
+          .done-logo {
+            top: 24px;
+            left: 50%;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: translateX(-50%);
+            justify-content: center;
+            gap: 16px;
+          }
+          .done-logo img { height: 38px; }
+          .done-logo-divider { display: block; height: 24px; }
+          .done-card { padding: 44px 40px 32px; }
+        }
+
+        /* ── Desktop ── */
+        @media (min-width: 1024px) {
+          .done-root { padding-top: 32px; }
+          .done-logo {
+            top: 36px;
+            left: 48px;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: none;
+            justify-content: flex-start;
+            gap: 20px;
+          }
+          .done-logo img { height: 48px; }
+          .done-logo-divider { display: block; height: 30px; }
+        }
+
+        /* ── Landscape phones ── */
+        @media (max-height: 600px) and (max-width: 900px) {
+          .done-root { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
+          .done-logo { display: none; }
+          .wave-back, .wave-mid, .wave-front, .ship-wrap, .buoy { display: none; }
+          .done-card { padding: 20px 18px; }
         }
       `}</style>
 
@@ -282,6 +352,8 @@ function DoneContent() {
         {/* Logo */}
         <div className="done-logo">
           <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <div className="done-logo-divider" />
+          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
         </div>
 
         {/* Stars */}
