@@ -147,7 +147,7 @@ export default function LoginPage() {
           display: flex; align-items: center; justify-content: center;
           font-family: 'Plus Jakarta Sans', sans-serif;
           background: linear-gradient(180deg, #0d1f3c 0%, #1B6FA8 55%, #2C8FC3 100%);
-          position: relative; overflow-y: auto; padding: 80px 16px 32px;
+          position: relative; overflow-x: hidden; overflow-y: auto; padding: 80px 16px 32px;
         }
 
         /* Grid overlay */
