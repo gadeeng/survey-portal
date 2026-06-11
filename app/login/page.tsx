@@ -273,14 +273,14 @@ export default function LoginPage() {
           transition: all 0.3s ease;
         }
         .login-logo img {
-          height: 28px;
+          height: 32px;
           width: auto;
           object-fit: contain;
           filter: brightness(0) invert(1);
           opacity: .88;
           transition: all 0.3s ease;
         }
-        .login-logo img.original-logo {
+        .login-logo img.danantara-logo {
           filter: none;
           opacity: 1;
         }
@@ -307,7 +307,7 @@ export default function LoginPage() {
             justify-content: center;
             gap: 16px;
           }
-          .login-logo img { height: 38px; }
+          .login-logo img.danantara-logo { height: 72px; }
           .logo-divider { display: block; height: 24px; }
         }
 
@@ -325,7 +325,7 @@ export default function LoginPage() {
             justify-content: flex-start;
             gap: 20px;
           }
-          .login-logo img { height: 48px; }
+          .login-logo img.danantara-logo { height: 88px; }
           .logo-divider { display: block; height: 30px; }
         }
 
@@ -384,7 +384,7 @@ export default function LoginPage() {
         <div className="login-logo">
           <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
           <div className="logo-divider" />
-          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
+          <img src="/logo_putih.png" alt="Danantara Indonesia" className="danantara-logo" />
         </div>
 
         {/* Form card (tidak diubah) */}

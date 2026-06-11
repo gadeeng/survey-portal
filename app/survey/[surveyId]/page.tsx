@@ -102,17 +102,17 @@ export default function SurveyIntroPage() {
           justify-content: space-between; /* kiri & kanan pada mobile */
           transition: all 0.3s ease;
         }
-        .logo-wrap img {
-          height: 28px;
-          width: auto;
-          object-fit: contain;
+        .logo-wrap img.pelindo-logo {
           filter: brightness(0) invert(1);
           opacity: .88;
-          transition: all 0.3s ease;
+          height: 32px;
+          width: auto;
+          object-fit: contain;
         }
-        .logo-wrap img.original-logo {
+        .logo-wrap img.danantara-logo {
           filter: none;
           opacity: 1;
+          height: 32px;
         }
         .logo-divider {
           display: none; /* disembunyikan pada mobile */
@@ -207,7 +207,7 @@ export default function SurveyIntroPage() {
             justify-content: center;
             gap: 16px;
           }
-          .logo-wrap img { height: 38px; }
+          .logo-wrap img.danantara-logo { height: 72px; }
           .logo-divider { display: block; height: 24px; }
 
           .card {
@@ -236,7 +236,7 @@ export default function SurveyIntroPage() {
             justify-content: flex-start;
             gap: 20px;
           }
-          .logo-wrap img { height: 48px; }
+          .logo-wrap img.danantara-logo { height: 88px; }
           .logo-divider { display: block; height: 30px; }
         }
 
@@ -286,9 +286,9 @@ export default function SurveyIntroPage() {
 
         {/* Logo */}
         <div className="logo-wrap">
-          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" className="pelindo-logo" />
           <div className="logo-divider" />
-          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
+          <img src="/logo_putih.png" alt="Danantara Indonesia" className="danantara-logo" />
         </div>
 
         {/* Card */}
