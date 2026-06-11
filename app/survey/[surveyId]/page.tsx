@@ -49,7 +49,8 @@ export default function SurveyIntroPage() {
           align-items: center;
           justify-content: center;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          background: linear-gradient(180deg, #0d1f3c 0%, #1B6FA8 55%, #2C8FC3 100%);
+          background: linear-gradient(180deg, rgba(13, 31, 60, 0.82) 0%, rgba(27, 111, 168, 0.82) 100%), url('/bg_pds.jpeg') no-repeat center center;
+          background-size: cover;
           position: relative;
           overflow: hidden;
           padding: 24px 16px;
@@ -86,20 +87,39 @@ export default function SurveyIntroPage() {
         @keyframes waveL { 0%{ transform:translateX(-50%) } 100%{ transform:translateX(0) } }
         @keyframes waveR { 0%{ transform:translateX(0) }   100%{ transform:translateX(-50%) } }
 
-        /* Logo — sits above card on mobile, floats top-left on desktop */
+        /* Logo — Pelindo kiri & Danantara kanan pada mobile,
+           centered berdampingan pada tablet, kiri pada desktop */
         .logo-wrap {
           position: absolute;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
+          top: 16px;
+          left: 0;
+          right: 0;
+          width: 100%;
+          padding: 0 20px;
           z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: space-between; /* kiri & kanan pada mobile */
+          transition: all 0.3s ease;
         }
         .logo-wrap img {
-          height: 36px;
+          height: 28px;
           width: auto;
           object-fit: contain;
           filter: brightness(0) invert(1);
           opacity: .88;
+          transition: all 0.3s ease;
+        }
+        .logo-wrap img.original-logo {
+          filter: none;
+          opacity: 1;
+        }
+        .logo-divider {
+          display: none; /* disembunyikan pada mobile */
+          width: 1px;
+          height: 20px;
+          background-color: rgba(255, 255, 255, 0.4);
+          transition: all 0.3s ease;
         }
 
         /* Card */
@@ -128,23 +148,7 @@ export default function SurveyIntroPage() {
         .survey-desc {
           font-size: 13.5px; color: #64748b; line-height: 1.7;
           margin-bottom: 24px;
-        }
-
-        /* Info grid */
-        .info-grid {
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 10px; margin-bottom: 24px;
-        }
-        .info-box {
-          background: #f8fafc; border: 1px solid #e8edf4;
-          border-radius: 10px; padding: 12px 14px;
-        }
-        .info-box-label {
-          font-size: 10px; font-weight: 600; letter-spacing: .8px;
-          text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;
-        }
-        .info-box-value {
-          font-size: 13px; font-weight: 600; color: #0d1f3c;
+          white-space: pre-line;
         }
 
         /* CTA Button */
@@ -190,15 +194,21 @@ export default function SurveyIntroPage() {
         @media (min-width: 600px) {
           .survey-root {
             padding: 32px 16px;
-            padding-top: 32px; /* logo floats top-left, no extra push needed */
+            padding-top: 88px; /* room for centered logo on tablet */
           }
 
           .logo-wrap {
-            top: 36px;
-            left: 48px;
-            transform: none;
+            top: 24px;
+            left: 50%;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: translateX(-50%);
+            justify-content: center;
+            gap: 16px;
           }
-          .logo-wrap img { height: 45px; }
+          .logo-wrap img { height: 38px; }
+          .logo-divider { display: block; height: 24px; }
 
           .card {
             padding: 48px 44px;
@@ -207,13 +217,27 @@ export default function SurveyIntroPage() {
           .survey-title { font-size: 26px; margin-bottom: 12px; }
           .survey-desc  { font-size: 14px; margin-bottom: 32px; }
 
-          .info-grid   { gap: 12px; margin-bottom: 32px; }
-          .info-box    { padding: 14px 16px; }
-          .info-box-label { font-size: 11px; }
-          .info-box-value { font-size: 14px; }
-
           .badge { margin-bottom: 20px; }
           .card-footer { margin-top: 24px; padding-top: 18px; font-size: 12px; }
+        }
+
+        @media (min-width: 1024px) {
+          .survey-root {
+            padding-top: 32px; /* logo floats top-left, no extra push needed */
+          }
+
+          .logo-wrap {
+            top: 36px;
+            left: 48px;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: none;
+            justify-content: flex-start;
+            gap: 20px;
+          }
+          .logo-wrap img { height: 48px; }
+          .logo-divider { display: block; height: 30px; }
         }
 
         /* Landscape phones — constrain vertical space */
@@ -225,7 +249,6 @@ export default function SurveyIntroPage() {
           .badge { margin-bottom: 10px; }
           .survey-title { font-size: 19px; margin-bottom: 8px; }
           .survey-desc  { margin-bottom: 16px; }
-          .info-grid { margin-bottom: 16px; }
         }
       `}</style>
 
@@ -264,6 +287,8 @@ export default function SurveyIntroPage() {
         {/* Logo */}
         <div className="logo-wrap">
           <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <div className="logo-divider" />
+          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
         </div>
 
         {/* Card */}
@@ -289,17 +314,6 @@ export default function SurveyIntroPage() {
               {data.survey.description && (
                 <p className="survey-desc">{data.survey.description}</p>
               )}
-
-              <div className="info-grid">
-                <div className="info-box">
-                  <p className="info-box-label">Jumlah Pertanyaan</p>
-                  <p className="info-box-value">{data.questions.length} pertanyaan</p>
-                </div>
-                <div className="info-box">
-                  <p className="info-box-label">Waktu Estimasi</p>
-                  <p className="info-box-value">~{Math.max(2, Math.ceil(data.questions.length * 0.5))} menit</p>
-                </div>
-              </div>
 
               <button
                 className="start-btn"

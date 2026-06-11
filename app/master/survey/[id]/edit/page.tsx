@@ -379,6 +379,8 @@ export default function EditSurveyPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [showConfirmPublish, setShowConfirmPublish] = useState(false)
   const [showPublishSuccess, setShowPublishSuccess] = useState(false)
+  const [status, setStatus] = useState<'draft' | 'active' | 'inactive'>('draft')
+  const [hasResponses, setHasResponses] = useState(false)
 
   useEffect(() => { fetchSurvey() }, [id])
 
@@ -391,6 +393,8 @@ export default function EditSurveyPage() {
     setSpreadsheetWebhookUrl(data.survey.spreadsheet_webhook_url || '')
     setUserFields(data.userFields.map((f: UserField) => ({ ...f, options: f.options || [], rating_min: f.rating_min || 1, rating_max: f.rating_max || 5 })))
     setQuestions(data.questions.map((q: Question) => ({ ...q, options: q.options || [], rating_min: q.rating_min || 1, rating_max: q.rating_max || 5 })))
+    setStatus(data.survey.status)
+    setHasResponses(data.hasResponses || false)
     setLoading(false)
   }
 
@@ -404,17 +408,17 @@ export default function EditSurveyPage() {
     const u = [...arr]; u.splice(to, 0, u.splice(from, 1)[0]); return u
   }
 
-  const handleSave = async (status: 'draft' | 'active') => {
+  const handleSave = async (statusToSave: 'draft' | 'active' | 'inactive') => {
     setSaving(true); setError('')
     try {
       const res = await fetch(`/api/master/surveys/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status, userFields, questions, spreadsheetWebhookUrl }),
+        body: JSON.stringify({ title, description, status: statusToSave, userFields, questions, spreadsheetWebhookUrl }),
       })
       const text = await res.text()
       if (!res.ok) { const d = text ? JSON.parse(text) : {}; setError(d.error || 'Terjadi kesalahan'); return }
-      status === 'active' ? setShowPublishSuccess(true) : router.push('/master')
+      statusToSave === 'active' ? setShowPublishSuccess(true) : router.push('/master')
     } catch { setError('Terjadi kesalahan, coba lagi') }
     finally { setSaving(false) }
   }
@@ -452,6 +456,23 @@ export default function EditSurveyPage() {
         <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0d1f3c', marginBottom: 20 }}>Edit Survey</h2>
         <StepIndicator steps={steps} current={step} />
       </div>
+
+      {hasResponses && (
+        <div style={{
+          background: '#fff3cd',
+          border: '1.5px solid #ffeeba',
+          color: '#856404',
+          padding: '12px 16px',
+          borderRadius: 8,
+          fontSize: 13.5,
+          lineHeight: 1.5,
+          marginBottom: 20,
+        }}>
+          <strong>⚠️ Perhatian:</strong> Survey ini sudah memiliki respons dari responden. 
+          Mengubah struktur kuesioner (seperti menghapus atau mengubah tipe pertanyaan/field) 
+          dapat menyebabkan data respons sebelumnya tidak sinkron atau terhapus.
+        </div>
+      )}
 
       {/* ══ Step 1 ══ */}
       {step === 1 && (
@@ -633,20 +654,49 @@ export default function EditSurveyPage() {
           <div className="step-nav">
             <button onClick={() => setStep(3)} style={btnSecondary}>← Kembali</button>
             <div className="step-nav-right">
-              <button
-                onClick={() => handleSave('draft')}
-                disabled={saving}
-                style={{ ...btnSecondary, opacity: saving ? 0.5 : 1 }}
-              >
-                {saving ? 'Menyimpan...' : 'Simpan Draft'}
-              </button>
-              <button
-                onClick={() => { if (!title.trim()) { setError('Judul survey wajib diisi'); return } setShowConfirmPublish(true) }}
-                disabled={saving}
-                style={{ ...btnSuccess, opacity: saving ? 0.5 : 1 }}
-              >
-                {saving ? 'Menyimpan...' : 'Publish Sekarang'}
-              </button>
+              {status === 'active' ? (
+                <button
+                  onClick={() => handleSave('active')}
+                  disabled={saving}
+                  style={{ ...btnSuccess, opacity: saving ? 0.5 : 1 }}
+                >
+                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              ) : status === 'inactive' ? (
+                <>
+                  <button
+                    onClick={() => handleSave('inactive')}
+                    disabled={saving}
+                    style={{ ...btnSecondary, opacity: saving ? 0.5 : 1 }}
+                  >
+                    {saving ? 'Menyimpan...' : 'Simpan (Tetap Nonaktif)'}
+                  </button>
+                  <button
+                    onClick={() => { if (!title.trim()) { setError('Judul survey wajib diisi'); return } setShowConfirmPublish(true) }}
+                    disabled={saving}
+                    style={{ ...btnSuccess, opacity: saving ? 0.5 : 1 }}
+                  >
+                    {saving ? 'Menyimpan...' : 'Simpan & Aktifkan'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleSave('draft')}
+                    disabled={saving}
+                    style={{ ...btnSecondary, opacity: saving ? 0.5 : 1 }}
+                  >
+                    {saving ? 'Menyimpan...' : 'Simpan Draft'}
+                  </button>
+                  <button
+                    onClick={() => { if (!title.trim()) { setError('Judul survey wajib diisi'); return } setShowConfirmPublish(true) }}
+                    disabled={saving}
+                    style={{ ...btnSuccess, opacity: saving ? 0.5 : 1 }}
+                  >
+                    {saving ? 'Menyimpan...' : 'Publish Sekarang'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

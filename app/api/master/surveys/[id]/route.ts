@@ -35,7 +35,17 @@ export async function GET(
     .eq('survey_id', id)
     .order('question_order')
 
-  return NextResponse.json({ survey, userFields: userFields || [], questions: questions || [] })
+  const { count: responseCount } = await supabase
+    .from('responses')
+    .select('*', { count: 'exact', head: true })
+    .eq('survey_id', id)
+
+  return NextResponse.json({
+    survey,
+    userFields: userFields || [],
+    questions: questions || [],
+    hasResponses: (responseCount || 0) > 0,
+  })
 }
 
 // PUT - Update survey
@@ -81,42 +91,108 @@ export async function PUT(
 
   if (surveyError) return NextResponse.json({ error: surveyError.message }, { status: 500 })
 
-  // Hapus fields & questions lama lalu insert baru
-  await supabase.from('survey_user_fields').delete().eq('survey_id', id)
-  await supabase.from('survey_questions').delete().eq('survey_id', id)
+  // Smart update for survey_user_fields
+  const { data: existingFields, error: getFieldsError } = await supabase
+    .from('survey_user_fields')
+    .select('id')
+    .eq('survey_id', id)
 
-  if (userFields.length > 0) {
-    await supabase.from('survey_user_fields').insert(
-      userFields.map((f: {
-        label: string; type: string; options: string[]
-        rating_min: number; rating_max: number
-      }, index: number) => ({
-        survey_id: id,
-        label: f.label,
-        type: f.type,
-        options: f.options?.length > 0 ? f.options : null,
-        rating_min: f.type === 'rating' ? f.rating_min : null,
-        rating_max: f.type === 'rating' ? f.rating_max : null,
-        field_order: index + 1
-      }))
-    )
+  if (getFieldsError) return NextResponse.json({ error: getFieldsError.message }, { status: 500 })
+
+  const existingFieldIds = new Set(existingFields?.map(f => f.id) || [])
+  const incomingFieldIds = new Set(userFields.map((f: any) => f.id).filter(Boolean))
+  const fieldsToDelete = [...existingFieldIds].filter(fid => !incomingFieldIds.has(fid))
+
+  // Update & Insert incoming user fields
+  for (let index = 0; index < userFields.length; index++) {
+    const f = userFields[index]
+    const payload = {
+      label: f.label,
+      type: f.type,
+      options: f.options?.length > 0 ? f.options : null,
+      rating_min: f.type === 'rating' ? f.rating_min : null,
+      rating_max: f.type === 'rating' ? f.rating_max : null,
+      field_order: index + 1
+    }
+
+    if (f.id && existingFieldIds.has(f.id)) {
+      // Update existing
+      const { error: updError } = await supabase
+        .from('survey_user_fields')
+        .update(payload)
+        .eq('id', f.id)
+      if (updError) return NextResponse.json({ error: updError.message }, { status: 500 })
+    } else {
+      // Insert new
+      const { error: insError } = await supabase
+        .from('survey_user_fields')
+        .insert({
+          survey_id: id,
+          ...payload
+        })
+      if (insError) return NextResponse.json({ error: insError.message }, { status: 500 })
+    }
   }
 
-  if (questions.length > 0) {
-    await supabase.from('survey_questions').insert(
-      questions.map((q: {
-        question_text: string; type: string; options: string[]
-        rating_min: number; rating_max: number
-      }, index: number) => ({
-        survey_id: id,
-        question_text: q.question_text,
-        type: q.type,
-        options: q.options?.length > 0 ? q.options : null,
-        rating_min: q.type === 'rating' ? q.rating_min : null,
-        rating_max: q.type === 'rating' ? q.rating_max : null,
-        question_order: index + 1
-      }))
-    )
+  // Delete removed fields
+  if (fieldsToDelete.length > 0) {
+    const { error: delError } = await supabase
+      .from('survey_user_fields')
+      .delete()
+      .in('id', fieldsToDelete)
+    if (delError) return NextResponse.json({ error: delError.message }, { status: 500 })
+  }
+
+  // Smart update for survey_questions
+  const { data: existingQuestions, error: getQuestionsError } = await supabase
+    .from('survey_questions')
+    .select('id')
+    .eq('survey_id', id)
+
+  if (getQuestionsError) return NextResponse.json({ error: getQuestionsError.message }, { status: 500 })
+
+  const existingQuestionIds = new Set(existingQuestions?.map(q => q.id) || [])
+  const incomingQuestionIds = new Set(questions.map((q: any) => q.id).filter(Boolean))
+  const questionsToDelete = [...existingQuestionIds].filter(qid => !incomingQuestionIds.has(qid))
+
+  // Update & Insert incoming questions
+  for (let index = 0; index < questions.length; index++) {
+    const q = questions[index]
+    const payload = {
+      question_text: q.question_text,
+      type: q.type,
+      options: q.options?.length > 0 ? q.options : null,
+      rating_min: q.type === 'rating' ? q.rating_min : null,
+      rating_max: q.type === 'rating' ? q.rating_max : null,
+      question_order: index + 1
+    }
+
+    if (q.id && existingQuestionIds.has(q.id)) {
+      // Update existing
+      const { error: updError } = await supabase
+        .from('survey_questions')
+        .update(payload)
+        .eq('id', q.id)
+      if (updError) return NextResponse.json({ error: updError.message }, { status: 500 })
+    } else {
+      // Insert new
+      const { error: insError } = await supabase
+        .from('survey_questions')
+        .insert({
+          survey_id: id,
+          ...payload
+        })
+      if (insError) return NextResponse.json({ error: insError.message }, { status: 500 })
+    }
+  }
+
+  // Delete removed questions
+  if (questionsToDelete.length > 0) {
+    const { error: delError } = await supabase
+      .from('survey_questions')
+      .delete()
+      .in('id', questionsToDelete)
+    if (delError) return NextResponse.json({ error: delError.message }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

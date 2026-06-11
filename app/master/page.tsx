@@ -313,7 +313,7 @@ const STATUS_MAP = {
 }
 
 type ModalState =
-  | { type: 'publish'; id: string; title: string }
+  | { type: 'publish'; id: string; title: string; currentStatus: 'draft' | 'inactive' }
   | { type: 'deactivate'; id: string; title: string }
   | { type: 'delete'; id: string; title: string }
   | null
@@ -501,13 +501,14 @@ export default function MasterDashboard() {
                       {survey.status === 'draft' && (
                         <>
                           <Link href={`/master/survey/${survey.id}/edit`} className="btn-ghost">Edit</Link>
-                          <button className="btn-publish" onClick={() => setModal({ type: 'publish', id: survey.id, title: survey.title })}>
+                          <button className="btn-publish" onClick={() => setModal({ type: 'publish', id: survey.id, title: survey.title, currentStatus: 'draft' })}>
                             Publish
                           </button>
                         </>
                       )}
                       {survey.status === 'active' && (
                         <>
+                          <Link href={`/master/survey/${survey.id}/edit`} className="btn-ghost">Edit</Link>
                           <button className="btn-ghost" onClick={() => handleCopyLink(survey.id)}>
                             {copiedId === survey.id ? '✓ Tersalin!' : '🔗 Salin Link'}
                           </button>
@@ -518,7 +519,13 @@ export default function MasterDashboard() {
                         </>
                       )}
                       {survey.status === 'inactive' && (
-                        <Link href={`/master/results/${survey.id}`} className="btn-ghost">Lihat Hasil</Link>
+                        <>
+                          <Link href={`/master/survey/${survey.id}/edit`} className="btn-ghost">Edit</Link>
+                          <button className="btn-publish" onClick={() => setModal({ type: 'publish', id: survey.id, title: survey.title, currentStatus: 'inactive' })}>
+                            Aktifkan
+                          </button>
+                          <Link href={`/master/results/${survey.id}`} className="btn-ghost">Lihat Hasil</Link>
+                        </>
                       )}
                       {user?.role === 'super_admin' && (
                         <button className="btn-delete" onClick={() => setModal({ type: 'delete', id: survey.id, title: survey.title })}>
@@ -539,12 +546,20 @@ export default function MasterDashboard() {
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon modal-icon-publish">📢</div>
-            <p className="modal-title">Publikasikan Survey?</p>
+            <p className="modal-title">
+              {modal.currentStatus === 'inactive' ? 'Aktifkan Kembali Survey?' : 'Publikasikan Survey?'}
+            </p>
             <p className="modal-survey-name">{modal.title}</p>
-            <p className="modal-desc">Survey ini akan dipublikasikan dan dapat diakses oleh responden.</p>
+            <p className="modal-desc">
+              {modal.currentStatus === 'inactive'
+                ? 'Survey ini akan diaktifkan kembali dan responden dapat mengisi kuesioner ini lagi.'
+                : 'Survey ini akan dipublikasikan dan dapat diakses oleh responden.'}
+            </p>
             <div className="modal-actions">
               <button className="btn-modal-cancel" onClick={() => setModal(null)}>Batal</button>
-              <button className="btn-modal-publish" onClick={handlePublish}>Ya, Publikasikan</button>
+              <button className="btn-modal-publish" onClick={handlePublish}>
+                {modal.currentStatus === 'inactive' ? 'Ya, Aktifkan' : 'Ya, Publikasikan'}
+              </button>
             </div>
           </div>
         </div>

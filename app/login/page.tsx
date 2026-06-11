@@ -147,7 +147,7 @@ export default function LoginPage() {
           display: flex; align-items: center; justify-content: center;
           font-family: 'Plus Jakarta Sans', sans-serif;
           background: linear-gradient(180deg, #0d1f3c 0%, #1B6FA8 55%, #2C8FC3 100%);
-          position: relative; overflow: hidden; padding: 32px 16px;
+          position: relative; overflow-y: auto; padding: 80px 16px 32px;
         }
 
         /* Grid overlay */
@@ -257,9 +257,84 @@ export default function LoginPage() {
         .password-toggle:focus { outline: 2px solid #1B6FA8; outline-offset: 2px; }
         .password-toggle svg { width: 20px; height: 20px; }
 
-        /* Logo */
-        .login-logo { position: absolute; top: 36px; left: 48px; z-index: 10; }
-        .login-logo img { height: 45px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: .88; }
+        /* Logo — Pelindo kiri & Danantara kanan pada mobile,
+           centered berdampingan pada tablet, kiri pada desktop */
+        .login-logo {
+          position: absolute;
+          top: 16px;
+          left: 0;
+          right: 0;
+          width: 100%;
+          padding: 0 20px;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: space-between; /* kiri & kanan pada mobile */
+          transition: all 0.3s ease;
+        }
+        .login-logo img {
+          height: 28px;
+          width: auto;
+          object-fit: contain;
+          filter: brightness(0) invert(1);
+          opacity: .88;
+          transition: all 0.3s ease;
+        }
+        .login-logo img.original-logo {
+          filter: none;
+          opacity: 1;
+        }
+        .logo-divider {
+          display: none; /* disembunyikan pada mobile */
+          width: 1px;
+          height: 20px;
+          background-color: rgba(255, 255, 255, 0.4);
+          transition: all 0.3s ease;
+        }
+
+        @media (min-width: 600px) {
+          .login-root {
+            padding: 32px 16px;
+            padding-top: 88px; /* room for centered logo on tablet */
+          }
+          .login-logo {
+            top: 24px;
+            left: 50%;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: translateX(-50%);
+            justify-content: center;
+            gap: 16px;
+          }
+          .login-logo img { height: 38px; }
+          .logo-divider { display: block; height: 24px; }
+        }
+
+        @media (min-width: 1024px) {
+          .login-root {
+            padding-top: 32px;
+          }
+          .login-logo {
+            top: 36px;
+            left: 48px;
+            right: auto;
+            width: auto;
+            padding: 0;
+            transform: none;
+            justify-content: flex-start;
+            gap: 20px;
+          }
+          .login-logo img { height: 48px; }
+          .logo-divider { display: block; height: 30px; }
+        }
+
+        /* Landscape phones — constrain vertical space */
+        @media (max-height: 600px) and (max-width: 900px) {
+          .login-root { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
+          .login-logo { display: none; }
+          .buoy, .ship-wrap { display: none; }
+        }
       `}</style>
 
       <div className="login-root">
@@ -308,6 +383,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="login-logo">
           <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <div className="logo-divider" />
+          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
         </div>
 
         {/* Form card (tidak diubah) */}
