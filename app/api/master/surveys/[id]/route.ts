@@ -211,18 +211,51 @@ export async function DELETE(
 
   const supabase = await createClient()
 
-  const { count } = await supabase
+  // 1. Ambil semua ID respons untuk survey ini
+  const { data: responses, error: fetchRespError } = await supabase
     .from('responses')
-    .select('*', { count: 'exact', head: true })
+    .select('id')
     .eq('survey_id', id)
 
-  if (count && count > 0) {
-    return NextResponse.json(
-      { error: 'Survey tidak bisa dihapus karena sudah ada respons' },
-      { status: 400 }
-    )
+  if (fetchRespError) return NextResponse.json({ error: fetchRespError.message }, { status: 500 })
+
+  const responseIds = responses?.map((r) => r.id) || []
+
+  // 2. Jika ada respons, hapus jawaban dan identitas respons terkait
+  if (responseIds.length > 0) {
+    const { error: delAnswersError } = await supabase
+      .from('response_answers')
+      .delete()
+      .in('response_id', responseIds)
+    if (delAnswersError) return NextResponse.json({ error: delAnswersError.message }, { status: 500 })
+
+    const { error: delUserFieldsError } = await supabase
+      .from('response_user_fields')
+      .delete()
+      .in('response_id', responseIds)
+    if (delUserFieldsError) return NextResponse.json({ error: delUserFieldsError.message }, { status: 500 })
+
+    const { error: delResponsesError } = await supabase
+      .from('responses')
+      .delete()
+      .eq('survey_id', id)
+    if (delResponsesError) return NextResponse.json({ error: delResponsesError.message }, { status: 500 })
   }
 
+  // 3. Hapus data konfigurasi fields dan pertanyaan survey
+  const { error: delSurveyFieldsError } = await supabase
+    .from('survey_user_fields')
+    .delete()
+    .eq('survey_id', id)
+  if (delSurveyFieldsError) return NextResponse.json({ error: delSurveyFieldsError.message }, { status: 500 })
+
+  const { error: delSurveyQuestionsError } = await supabase
+    .from('survey_questions')
+    .delete()
+    .eq('survey_id', id)
+  if (delSurveyQuestionsError) return NextResponse.json({ error: delSurveyQuestionsError.message }, { status: 500 })
+
+  // 4. Hapus survey utama
   const { error } = await supabase.from('surveys').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

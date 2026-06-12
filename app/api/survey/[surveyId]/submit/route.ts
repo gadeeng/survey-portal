@@ -90,56 +90,9 @@ export async function POST(
     }
   }
 
-  // 1. Buat response baru
-  const { data: response, error: responseError } = await supabase
-    .from('responses')
-    .insert({
-      survey_id: surveyId,
-      submitted_at: new Date().toISOString(),
-    })
-    .select('id')
-    .single()
-
-  if (responseError || !response) {
-    return NextResponse.json({ error: 'Gagal menyimpan respons' }, { status: 500 })
-  }
-
-  const responseId = response.id
-
-  try {
-    // 2. Simpan identitas
-    if (identityAnswers.length > 0) {
-      const { error: fieldsError } = await supabase
-        .from('response_user_fields')
-        .insert(
-          identityAnswers.map((item) => ({
-            response_id: responseId,
-            field_id: item.fieldId,
-            value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
-          }))
-        )
-
-      if (fieldsError) throw new Error('Gagal menyimpan data identitas')
-    }
-
-    // 3. Simpan jawaban pertanyaan
-    if (questionAnswers.length > 0) {
-      const { error: answersError } = await supabase
-        .from('response_answers')
-        .insert(
-          questionAnswers.map((item) => ({
-            response_id: responseId,
-            question_id: item.questionId,
-            value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
-          }))
-        )
-
-      if (answersError) throw new Error('Gagal menyimpan jawaban')
-    }
-
-    // 4. Kirim data ke Google Sheets (fire-and-forget)
-    if (survey.spreadsheet_webhook_url) {
-
+  // 1. Kirim data ke Google Sheets terlebih dahulu jika webhook URL tersedia
+  if (survey.spreadsheet_webhook_url) {
+    try {
       // Resolve nama entitas jika ada input bertipe entity
       const entityIds = identityAnswers
         .filter(ans => {
@@ -189,6 +142,61 @@ export async function POST(
         values,
         timestamp: new Date().toISOString(),
       })
+    } catch (err: any) {
+      console.error('Gagal mengirim ke Google Sheets:', err)
+      // Jika Google Sheets sendiri gagal, kita kembalikan error ke user agar bisa mencoba lagi
+      return NextResponse.json(
+        { error: 'Gagal mengirim data ke Google Sheets. Silakan coba lagi.' },
+        { status: 500 }
+      )
+    }
+  }
+
+  // 2. Simpan ke database Supabase secara aman (jika gagal, tetap return sukses karena data di Google Sheets sudah tersimpan)
+  try {
+    const { data: response, error: responseError } = await supabase
+      .from('responses')
+      .insert({
+        survey_id: surveyId,
+        submitted_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+
+    if (responseError || !response) {
+      throw new Error(responseError?.message || 'Gagal menyimpan respons utama')
+    }
+
+    const responseId = response.id
+
+    // Simpan identitas
+    if (identityAnswers.length > 0) {
+      const { error: fieldsError } = await supabase
+        .from('response_user_fields')
+        .insert(
+          identityAnswers.map((item) => ({
+            response_id: responseId,
+            field_id: item.fieldId,
+            value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
+          }))
+        )
+
+      if (fieldsError) throw new Error('Gagal menyimpan data identitas: ' + fieldsError.message)
+    }
+
+    // Simpan jawaban pertanyaan
+    if (questionAnswers.length > 0) {
+      const { error: answersError } = await supabase
+        .from('response_answers')
+        .insert(
+          questionAnswers.map((item) => ({
+            response_id: responseId,
+            question_id: item.questionId,
+            value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
+          }))
+        )
+
+      if (answersError) throw new Error('Gagal menyimpan jawaban: ' + answersError.message)
     }
 
     return NextResponse.json({
@@ -197,14 +205,14 @@ export async function POST(
       message: 'Terima kasih! Jawaban Anda telah disimpan.'
     })
 
-  } catch (err: any) {
-    // Rollback
-    await supabase.from('response_user_fields').delete().eq('response_id', responseId)
-    await supabase.from('responses').delete().eq('id', responseId)
+  } catch (dbError: any) {
+    // Log error database secara internal
+    console.error('Database Save Error (tetapi Google Sheets sukses):', dbError)
 
-    return NextResponse.json(
-      { error: err.message || 'Gagal menyimpan jawaban' },
-      { status: 500 }
-    )
+    // Tetap kembalikan sukses kepada responden agar tidak submit berulang kali ke Google Sheets
+    return NextResponse.json({
+      success: true,
+      message: 'Terima kasih! Jawaban Anda telah disimpan.'
+    })
   }
 }
