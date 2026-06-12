@@ -131,7 +131,8 @@ function DoneContent() {
           min-height: 100dvh;
           display: flex; align-items: center; justify-content: center;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          background: linear-gradient(180deg, #0d1f3c 0%, #1B6FA8 55%, #2C8FC3 100%);
+          background: linear-gradient(180deg, rgba(13, 31, 60, 0.82) 0%, rgba(27, 111, 168, 0.82) 100%), url('/bg_pds.jpeg') no-repeat center center;
+          background-size: cover;
           position: relative; overflow-x: hidden; overflow-y: auto;
           padding: 80px 16px 32px; /* room for logo bar on mobile */
         }
@@ -204,7 +205,7 @@ function DoneContent() {
           justify-content: space-between;
           transition: all 0.3s ease;
         }
-        .done-logo img {
+        .done-logo img.pelindo-logo {
           height: 28px;
           width: auto;
           object-fit: contain;
@@ -212,9 +213,11 @@ function DoneContent() {
           opacity: .88;
           transition: all 0.3s ease;
         }
-        .done-logo img.original-logo {
+        .done-logo img.danantara-logo {
           filter: none;
           opacity: 1;
+          height: 80px;
+          transition: all 0.3s ease;
         }
         .done-logo-divider {
           display: none;
@@ -316,7 +319,8 @@ function DoneContent() {
             justify-content: center;
             gap: 16px;
           }
-          .done-logo img { height: 38px; }
+          .done-logo img.pelindo-logo { height: 38px; }
+          .done-logo img.danantara-logo { height: 72px; }
           .done-logo-divider { display: block; height: 24px; }
           .done-card { padding: 44px 40px 32px; }
         }
@@ -334,7 +338,8 @@ function DoneContent() {
             justify-content: flex-start;
             gap: 20px;
           }
-          .done-logo img { height: 48px; }
+          .done-logo img.pelindo-logo { height: 48px; }
+          .done-logo img.danantara-logo { height: 88px; }
           .done-logo-divider { display: block; height: 30px; }
         }
 
@@ -351,9 +356,9 @@ function DoneContent() {
 
         {/* Logo */}
         <div className="done-logo">
-          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" className="pelindo-logo" />
           <div className="done-logo-divider" />
-          <img src="/danantara-indonesia.png" alt="Danantara Indonesia" className="original-logo" />
+          <img src="/logo_putih.png" alt="Danantara Indonesia" className="danantara-logo" />
         </div>
 
         {/* Stars */}

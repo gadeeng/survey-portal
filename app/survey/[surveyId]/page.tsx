@@ -112,7 +112,7 @@ export default function SurveyIntroPage() {
         .logo-wrap img.danantara-logo {
           filter: none;
           opacity: 1;
-          height: 32px;
+          height: 80px;
         }
         .logo-divider {
           display: none; /* disembunyikan pada mobile */

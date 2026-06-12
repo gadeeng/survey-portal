@@ -272,8 +272,8 @@ export default function LoginPage() {
           justify-content: space-between; /* kiri & kanan pada mobile */
           transition: all 0.3s ease;
         }
-        .login-logo img {
-          height: 32px;
+        .login-logo img.pelindo-logo {
+          height: 28px;
           width: auto;
           object-fit: contain;
           filter: brightness(0) invert(1);
@@ -283,6 +283,8 @@ export default function LoginPage() {
         .login-logo img.danantara-logo {
           filter: none;
           opacity: 1;
+          height: 80px;
+          transition: all 0.3s ease;
         }
         .logo-divider {
           display: none; /* disembunyikan pada mobile */
@@ -307,6 +309,7 @@ export default function LoginPage() {
             justify-content: center;
             gap: 16px;
           }
+          .login-logo img.pelindo-logo { height: 38px; }
           .login-logo img.danantara-logo { height: 72px; }
           .logo-divider { display: block; height: 24px; }
         }
@@ -325,6 +328,7 @@ export default function LoginPage() {
             justify-content: flex-start;
             gap: 20px;
           }
+          .login-logo img.pelindo-logo { height: 48px; }
           .login-logo img.danantara-logo { height: 88px; }
           .logo-divider { display: block; height: 30px; }
         }
@@ -382,7 +386,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="login-logo">
-          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" />
+          <img src="/white-logo.png" alt="PT Pelindo Daya Sejahtera" className="pelindo-logo" />
           <div className="logo-divider" />
           <img src="/logo_putih.png" alt="Danantara Indonesia" className="danantara-logo" />
         </div>
