@@ -66,7 +66,7 @@ export default function SurveyQuestionsPage() {
     const errs: Record<string, string> = {}
     questions.forEach((q) => {
       const val = answers[q.id]
-      const empty = Array.isArray(val) ? val.length === 0 : !val
+      const empty = Array.isArray(val) ? val.length === 0 : (typeof val === 'string' ? !val.trim() : !val)
       if (empty) errs[q.id] = 'Wajib diisi'
     })
     setErrors(errs)
@@ -199,6 +199,7 @@ export default function SurveyQuestionsPage() {
 
         .q-number { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
         .q-text { font-size: 15px; font-weight: 600; color: #0d1f3c; margin-bottom: 16px; line-height: 1.5; }
+        .required-dot { color: #ef4444; margin-left: 3px; }
 
         .f-input, .f-textarea, .f-select {
           width: 100%; background: #f8fafc; border: 1px solid #dde3ec; border-radius: 8px;
@@ -357,7 +358,10 @@ export default function SurveyQuestionsPage() {
                   className={`q-card ${errors[q.id] ? 'has-error' : ''} ${isAnswered ? 'answered' : ''}`}
                 >
                   <p className="q-number">Pertanyaan {idx + 1}</p>
-                  <p className="q-text">{q.question_text}</p>
+                  <p className="q-text">
+                    {q.question_text}
+                    <span className="required-dot">*</span>
+                  </p>
 
                   {q.type === 'short_text' && (
                     <input

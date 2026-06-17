@@ -68,7 +68,7 @@ export default function SurveyIdentityPage() {
     const errs: Record<string, string> = {}
     fields.forEach((f) => {
       const val = answers[f.id]
-      const empty = Array.isArray(val) ? val.length === 0 : !val
+      const empty = Array.isArray(val) ? val.length === 0 : (typeof val === 'string' ? !val.trim() : !val)
       if (empty) errs[f.id] = 'Wajib diisi'
     })
     setErrors(errs)
