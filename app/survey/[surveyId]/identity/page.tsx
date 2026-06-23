@@ -64,12 +64,30 @@ export default function SurveyIdentityPage() {
     )
   }
 
+  const getEntityChildren = (parentId: string) =>
+    entities.filter((e) => e.parent_id === parentId && e.is_active !== false)
+
+  const getEntityRoots = () =>
+    entities.filter((e) => e.level === 1)
+
   const validate = () => {
     const errs: Record<string, string> = {}
     fields.forEach((f) => {
       const val = answers[f.id]
       const empty = Array.isArray(val) ? val.length === 0 : (typeof val === 'string' ? !val.trim() : !val)
-      if (empty) errs[f.id] = 'Wajib diisi'
+      if (empty) {
+        errs[f.id] = 'Wajib diisi'
+      } else if (f.type === 'entity') {
+        const sel = entitySelections[f.id] || { l1: '', l2: '', l3: '' }
+        const level2Options = sel.l1 ? getEntityChildren(sel.l1) : []
+        const level3Options = sel.l2 ? getEntityChildren(sel.l2) : []
+
+        if (level2Options.length > 0 && !sel.l2) {
+          errs[f.id] = 'Anak Perusahaan wajib dipilih'
+        } else if (level3Options.length > 0 && !sel.l3) {
+          errs[f.id] = 'Cabang/Unit wajib dipilih'
+        }
+      }
     })
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -95,12 +113,6 @@ export default function SurveyIdentityPage() {
       return { ...prev, [fieldId]: next }
     })
   }
-
-  const getEntityChildren = (parentId: string) =>
-    entities.filter((e) => e.parent_id === parentId && e.is_active !== false)
-
-  const getEntityRoots = () =>
-    entities.filter((e) => e.level === 1)
 
 
   return (
@@ -395,7 +407,7 @@ export default function SurveyIdentityPage() {
                       {sel.l1 && level2Options.length > 0 && (
                         <div>
                           <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
-                            Anak Perusahaan
+                            Anak Perusahaan <span className="required-dot">*</span>
                           </p>
                           <select
                             className="f-select"
@@ -414,7 +426,7 @@ export default function SurveyIdentityPage() {
                       {sel.l2 && level3Options.length > 0 && (
                         <div>
                           <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
-                            Cabang/Unit
+                            Cabang/Unit <span className="required-dot">*</span>
                           </p>
                           <select
                             className="f-select"
