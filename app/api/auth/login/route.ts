@@ -7,7 +7,7 @@ import { rateLimit } from '@/lib/rate-limit'
 export async function POST(request: NextRequest) {
   // Rate limiting: maks 5 percobaan per menit per IP
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || '127.0.0.1'
-  const limitResult = rateLimit(ip, 5, 60 * 1000)
+  const limitResult = await rateLimit(ip, 5, 60 * 1000)
 
   if (!limitResult.success) {
     return NextResponse.json(

@@ -19,7 +19,7 @@ export async function POST(
 ) {
   // Rate Limiting: maks 3 submit per 5 menit per IP
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || '127.0.0.1'
-  const limitResult = rateLimit(ip, 3, 5 * 60 * 1000)
+  const limitResult = await rateLimit(ip, 3, 5 * 60 * 1000)
 
   if (!limitResult.success) {
     return NextResponse.json(
