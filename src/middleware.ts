@@ -4,28 +4,38 @@ import { decrypt } from '@/lib/session'
 
 export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('user_session')
+  const { pathname } = request.nextUrl
 
-  if (!sessionCookie || !sessionCookie.value) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  let user = null
+  if (sessionCookie?.value) {
+    try {
+      user = await decrypt(sessionCookie.value)
+    } catch {
+      // Ignore decryption errors
+    }
   }
 
-  try {
-    const user = await decrypt(sessionCookie.value)
-    
+  // 1. Proteksi rute yang membutuhkan login (/master, /admin)
+  const isAuthRoute = pathname.startsWith('/master') || pathname.startsWith('/admin')
+  if (isAuthRoute) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
-
-    if (request.nextUrl.pathname.startsWith('/admin') && user.role !== 'super_admin') {
+    
+    if (pathname.startsWith('/admin') && user.role !== 'super_admin') {
       return NextResponse.redirect(new URL('/master', request.url))
     }
-
-    return NextResponse.next()
-  } catch {
-    return NextResponse.redirect(new URL('/login', request.url))
   }
+
+  // 2. Jika sudah login dan mengakses halaman tamu (/login atau /), arahkan ke /master
+  const isGuestRoute = pathname === '/login' || pathname === '/'
+  if (isGuestRoute && user) {
+    return NextResponse.redirect(new URL('/master', request.url))
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/master/:path*', '/admin/:path*'],
+  matcher: ['/', '/login', '/master/:path*', '/admin/:path*'],
 }

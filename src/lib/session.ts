@@ -39,21 +39,21 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
 export async function verifySession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get('user_session')?.value
-  
+
   if (!sessionCookie) return null
-  
+
   return await decrypt(sessionCookie)
 }
 
 export async function createSession(payload: SessionPayload) {
   const session = await encrypt(payload)
-  
+
   const cookieStore = await cookies()
   cookieStore.set('user_session', session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60, // 7 hari dalam detik
+    maxAge: 7 * 24 * 60 * 60,
     path: '/',
   })
 }
