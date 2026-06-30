@@ -180,6 +180,98 @@ export default function SurveyIntroPage() {
         .error-title { font-size: 17px; font-weight: 700; color: #0d1f3c; margin-bottom: 6px; }
         .error-desc { font-size: 13px; color: #94a3b8; }
 
+        /* Closed State */
+        .closed-state {
+          text-align: center;
+          padding: 8px 4px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .closed-icon-wrap {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(27, 111, 168, 0.15) 0%, rgba(27, 111, 168, 0.03) 100%);
+          border: 1px solid rgba(27, 111, 168, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 24px;
+          box-shadow: 0 10px 25px -5px rgba(27, 111, 168, 0.15);
+          animation: floatClosedIcon 3s ease-in-out infinite;
+        }
+
+        .closed-icon-wrap svg {
+          width: 40px;
+          height: 40px;
+          color: #1B6FA8;
+        }
+        
+        @keyframes floatClosedIcon {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+
+        .closed-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #F1F5F9;
+          color: #64748B;
+          border-radius: 20px;
+          padding: 4px 12px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          margin-bottom: 18px;
+        }
+        
+        .closed-badge-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #94A3B8;
+        }
+
+        .closed-title {
+          font-size: 24px;
+          font-weight: 800;
+          background: linear-gradient(135deg, #0d1f3c 0%, #1B6FA8 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 12px;
+          letter-spacing: -0.5px;
+        }
+
+        .closed-desc {
+          font-size: 14.5px;
+          color: #475569;
+          line-height: 1.65;
+          margin-bottom: 24px;
+          max-width: 340px;
+        }
+
+        .closed-divider {
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+          margin-bottom: 20px;
+        }
+
+        .closed-note {
+          font-size: 12px;
+          color: #64748B;
+          background: #F8FAFC;
+          padding: 10px 16px;
+          border-radius: 8px;
+          border: 1px dashed #E2E8F0;
+          max-width: 360px;
+          line-height: 1.5;
+        }
+
         /* Loading */
         .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0; }
         .spinner {
@@ -299,11 +391,34 @@ export default function SurveyIntroPage() {
               <p className="loading-text">Memuat survey...</p>
             </div>
           ) : error ? (
-            <div className="error-state">
-              <div className="error-icon">⚓</div>
-              <p className="error-title">Survey Tidak Tersedia</p>
-              <p className="error-desc">{error}</p>
-            </div>
+            error.includes('ditutup') ? (
+              <div className="closed-state">
+                <div className="closed-badge">
+                  <span className="closed-badge-dot" />
+                  Survei Selesai
+                </div>
+                <div className="closed-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                </div>
+                <h1 className="closed-title">Survei Telah Ditutup</h1>
+                <p className="closed-desc">
+                  Terima kasih atas partisipasi Anda. Masukan serta kontribusi Anda sangat berharga bagi peningkatan layanan kami.
+                </p>
+                <div className="closed-divider" />
+                <div className="closed-note">
+                  Survei ini sudah tidak menerima tanggapan baru. Silakan hubungi unit penyelenggara untuk informasi lebih lanjut.
+                </div>
+              </div>
+            ) : (
+              <div className="error-state">
+                <div className="error-icon">⚓</div>
+                <p className="error-title">Survey Tidak Tersedia</p>
+                <p className="error-desc">{error}</p>
+              </div>
+            )
           ) : data ? (
             <>
               <div className="badge">

@@ -43,7 +43,7 @@ export async function POST(
   }
 
   if (survey.status !== 'active') {
-    return NextResponse.json({ error: 'Survey sedang tidak tersedia' }, { status: 403 })
+    return NextResponse.json({ error: 'Survei telah ditutup, terima kasih atas partisipasi Anda.' }, { status: 403 })
   }
 
   // Parse body
